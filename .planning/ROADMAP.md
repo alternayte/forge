@@ -90,10 +90,12 @@ Plans:
   3. Developer can override actions by embedding DefaultActions and replacing specific methods
   4. Action layer automatically maps database errors to forge.Error with proper HTTP status codes
   5. Panic recovery middleware catches panics and returns 500 errors without exposing internals
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- TBD
+- [ ] 04-01-PLAN.md — forge.Error type, error constructors, and database error mapping generation
+- [ ] 04-02-PLAN.md — Action interfaces and DefaultActions implementation generation
+- [ ] 04-03-PLAN.md — Panic recovery middleware, error rendering, and orchestrator wiring
 
 ### Phase 5: REST API Generation
 **Goal**: Developer gets a production-ready REST API with OpenAPI 3.1 documentation automatically generated from schema
@@ -178,7 +180,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 1. Foundation & Schema DSL | 0/5 | Planned | - |
 | 2. Code Generation Engine | 0/5 | Planned | - |
 | 3. Query & Data Access | 0/3 | Planned | - |
-| 4. Action Layer & Error Handling | 0/TBD | Not started | - |
+| 4. Action Layer & Error Handling | 0/3 | Planned | - |
 | 5. REST API Generation | 0/TBD | Not started | - |
 | 6. Hypermedia UI Generation | 0/TBD | Not started | - |
 | 7. Advanced Data Features | 0/TBD | Not started | - |

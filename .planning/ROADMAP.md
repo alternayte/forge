@@ -53,10 +53,14 @@ Plans:
   4. forge migrate diff creates SQL migration files based on schema changes
   5. forge migrate up/down applies and rolls back migrations successfully
   6. forge dev starts a development server with file watching and hot reload
-**Plans**: TBD
+**Plans:** 5 plans
 
 Plans:
-- TBD
+- [ ] 02-01-PLAN.md — Generator infrastructure and Go model type generation
+- [ ] 02-02-PLAN.md — Atlas HCL schema generation and test factory generation
+- [ ] 02-03-PLAN.md — forge generate CLI command (parser-generator pipeline)
+- [ ] 02-04-PLAN.md — Atlas migration commands (diff, up, down, status) with destructive detection
+- [ ] 02-05-PLAN.md — forge dev command with file watching and hot reload
 
 ### Phase 3: Query & Data Access
 **Goal**: Developer can execute type-safe CRUD queries with dynamic filtering, sorting, and pagination
@@ -170,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Schema DSL | 0/5 | Planned | - |
-| 2. Code Generation Engine | 0/TBD | Not started | - |
+| 2. Code Generation Engine | 0/5 | Planned | - |
 | 3. Query & Data Access | 0/TBD | Not started | - |
 | 4. Action Layer & Error Handling | 0/TBD | Not started | - |
 | 5. REST API Generation | 0/TBD | Not started | - |

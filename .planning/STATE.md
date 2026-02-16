@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 3 of 8 (Query & Data Access)
-Plan: 2 of 3 in current phase
+Plan: 3 of 3 in current phase
 Status: In Progress
-Last activity: 2026-02-16 — Completed 03-01-PLAN.md
+Last activity: 2026-02-16 — Completed 03-02-PLAN.md
 
-Progress: [███░░░░░░░] 25%
+Progress: [███░░░░░░░] 27%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 3.7 minutes
-- Total execution time: 0.69 hours
+- Total execution time: 0.75 hours
 
 **By Phase:**
 
@@ -29,18 +29,18 @@ Progress: [███░░░░░░░] 25%
 |-------|-------|-------|----------|
 | 01 | 5 | 18.9m | 3.8m |
 | 02 | 5 | 18.0m | 3.6m |
-| 03 | 2 | 6.5m | 3.2m |
+| 03 | 3 | 10.2m | 3.4m |
 
 **Recent Executions:**
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
-| 02 | 02 | 4.5m | 2 | 10 |
 | 02 | 03 | 2.9m | 1 | 2 |
 | 02 | 05 | 3.1m | 2 | 7 |
 | 02 | 04 | 4.3m | 2 | 5 |
 | 03 | 03 | 2.5m | 2 | 2 |
 | 03 | 01 | 4.0m | 2 | 9 |
+| 03 | 02 | 3.7m | 2 | 10 |
 
 ## Accumulated Context
 
@@ -91,6 +91,10 @@ Recent decisions affecting current work:
 - [Phase 03-01]: Separate types.go file prevents FieldError redeclaration across multiple resources
 - [Phase 03-01]: Bob query mods use sm.QueryMod[*psql.SelectQuery] generic type for type safety
 - [Phase 03-01]: Type-specific query filters: string → Contains (ILIKE), numeric/date → GTE/LTE
+- [Phase 03-02]: Pagination utilities generated once (not per-resource) since logic is generic
+- [Phase 03-02]: Cursor includes ID + sort field + sort value for uniqueness and stability
+- [Phase 03-02]: Page size capped at 100 to prevent accidental large queries
+- [Phase 03-02]: ProjectRoot added to GenerateConfig for files outside gen/ directory
 
 ### Pending Todos
 
@@ -102,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-16T20:25:00Z
-Stopped at: Completed 03-01-PLAN.md
-Resume file: Phase 03 plan 01 complete - Validation and query builder generation
+Last session: 2026-02-16T20:32:07Z
+Stopped at: Completed 03-02-PLAN.md
+Resume file: Phase 03 plan 02 complete - Pagination, SQLC config, and transaction generation

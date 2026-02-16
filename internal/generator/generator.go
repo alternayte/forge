@@ -1,0 +1,81 @@
+package generator
+
+import (
+	"bytes"
+	"os"
+	"path/filepath"
+	"text/template"
+
+	"github.com/forge-framework/forge/internal/parser"
+)
+
+// GenerateConfig holds configuration for the generator.
+type GenerateConfig struct {
+	OutputDir     string // Output directory for generated files
+	ProjectModule string // Go module path of the generated project
+}
+
+// Generate orchestrates all code generation from parsed resources.
+func Generate(resources []parser.ResourceIR, cfg GenerateConfig) error {
+	// GenerateModels will be implemented in Task 2
+	// Later tasks will add GenerateAtlasSchema, GenerateFactories, etc.
+	_ = resources
+	_ = cfg
+	return nil
+}
+
+// renderTemplate parses and executes a template from TemplatesFS.
+func renderTemplate(tmplName string, data interface{}) ([]byte, error) {
+	// Read template content from embedded filesystem
+	content, err := TemplatesFS.ReadFile(tmplName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse template with FuncMap
+	tmpl, err := template.New(filepath.Base(tmplName)).Funcs(BuildFuncMap()).Parse(string(content))
+	if err != nil {
+		return nil, err
+	}
+
+	// Execute template to buffer
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+// writeGoFile writes a Go file with formatting and import management.
+func writeGoFile(outputPath string, raw []byte) error {
+	// Format the source
+	formatted, err := FormatGoSource(outputPath, raw)
+	if err != nil {
+		return err
+	}
+
+	// Ensure parent directory exists
+	if err := ensureDir(filepath.Dir(outputPath)); err != nil {
+		return err
+	}
+
+	// Write to disk
+	return os.WriteFile(outputPath, formatted, 0644)
+}
+
+// writeRawFile writes a non-Go file directly without formatting.
+func writeRawFile(outputPath string, raw []byte) error {
+	// Ensure parent directory exists
+	if err := ensureDir(filepath.Dir(outputPath)); err != nil {
+		return err
+	}
+
+	// Write to disk
+	return os.WriteFile(outputPath, raw, 0644)
+}
+
+// ensureDir creates a directory if it doesn't exist.
+func ensureDir(path string) error {
+	return os.MkdirAll(path, 0755)
+}

@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 
@@ -10,18 +11,23 @@ import (
 // BuildFuncMap returns a FuncMap with all template helper functions.
 func BuildFuncMap() template.FuncMap {
 	return template.FuncMap{
-		"goType":           goType,
-		"goPointerType":    goPointerType,
-		"lower":            lower,
-		"plural":           plural,
-		"camel":            camel,
-		"snake":            snake,
-		"hasModifier":      hasModifier,
-		"getModifierValue": getModifierValue,
-		"isRequired":       isRequired,
-		"isIDField":        isIDField,
-		"isFilterable":     isFilterable,
-		"isSortable":       isSortable,
+		"goType":                goType,
+		"goPointerType":         goPointerType,
+		"lower":                 lower,
+		"plural":                plural,
+		"camel":                 camel,
+		"snake":                 snake,
+		"hasModifier":           hasModifier,
+		"getModifierValue":      getModifierValue,
+		"isRequired":            isRequired,
+		"isIDField":             isIDField,
+		"isFilterable":          isFilterable,
+		"isSortable":            isSortable,
+		"atlasType":             atlasType,
+		"atlasTypeWithModifiers": atlasTypeWithModifiers,
+		"atlasNull":             atlasNull,
+		"atlasDefault":          atlasDefault,
+		"hasDefault":            hasDefault,
 	}
 }
 
@@ -156,4 +162,97 @@ func isFilterable(modifiers []parser.ModifierIR) bool {
 // isSortable checks if a field has the Sortable modifier.
 func isSortable(modifiers []parser.ModifierIR) bool {
 	return hasModifier(modifiers, "Sortable")
+}
+
+// atlasType maps IR field type strings to Atlas HCL/PostgreSQL type names.
+func atlasType(fieldType string) string {
+	switch fieldType {
+	case "UUID":
+		return "uuid"
+	case "String":
+		return "varchar(255)"
+	case "Text":
+		return "text"
+	case "Int":
+		return "integer"
+	case "BigInt":
+		return "bigint"
+	case "Decimal":
+		return "numeric(10,2)"
+	case "Bool":
+		return "boolean"
+	case "DateTime":
+		return "timestamptz"
+	case "Date":
+		return "date"
+	case "Enum":
+		return "text"
+	case "JSON":
+		return "jsonb"
+	case "Slug":
+		return "varchar(255)"
+	case "Email":
+		return "varchar(255)"
+	case "URL":
+		return "text"
+	default:
+		return "text"
+	}
+}
+
+// atlasTypeWithModifiers returns the Atlas type with modifiers applied (e.g., MaxLen).
+func atlasTypeWithModifiers(field parser.FieldIR) string {
+	baseType := atlasType(field.Type)
+
+	// Check for MaxLen modifier to override varchar length
+	if field.Type == "String" || field.Type == "Slug" || field.Type == "Email" {
+		if maxLen := getModifierValue(field.Modifiers, "MaxLen"); maxLen != nil {
+			if length, ok := maxLen.(int); ok {
+				return fmt.Sprintf("varchar(%d)", length)
+			}
+		}
+	}
+
+	return baseType
+}
+
+// atlasNull returns "false" if Required modifier present, "true" otherwise.
+func atlasNull(modifiers []parser.ModifierIR) string {
+	if hasModifier(modifiers, "Required") {
+		return "false"
+	}
+	return "true"
+}
+
+// atlasDefault returns the Atlas default expression if Default modifier is present.
+func atlasDefault(field parser.FieldIR) string {
+	defaultVal := getModifierValue(field.Modifiers, "Default")
+	if defaultVal == nil {
+		return ""
+	}
+
+	switch v := defaultVal.(type) {
+	case string:
+		// String defaults are quoted
+		return `"` + v + `"`
+	case bool:
+		// Bool defaults are true/false
+		if v {
+			return "true"
+		}
+		return "false"
+	case int:
+		return fmt.Sprintf("%d", v)
+	case int64:
+		return fmt.Sprintf("%d", v)
+	case float64:
+		return fmt.Sprintf("%f", v)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+// hasDefault checks if a field has a Default modifier.
+func hasDefault(field parser.FieldIR) bool {
+	return hasModifier(field.Modifiers, "Default")
 }

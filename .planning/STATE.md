@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 3 of 8 (Query & Data Access)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-02-16 — Completed 03-03-PLAN.md
+Last activity: 2026-02-16 — Completed 03-01-PLAN.md
 
-Progress: [███░░░░░░░] 23%
+Progress: [███░░░░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 3.6 minutes
-- Total execution time: 0.62 hours
+- Total plans completed: 12
+- Average duration: 3.7 minutes
+- Total execution time: 0.69 hours
 
 **By Phase:**
 
@@ -29,18 +29,18 @@ Progress: [███░░░░░░░] 23%
 |-------|-------|-------|----------|
 | 01 | 5 | 18.9m | 3.8m |
 | 02 | 5 | 18.0m | 3.6m |
-| 03 | 1 | 2.5m | 2.5m |
+| 03 | 2 | 6.5m | 3.2m |
 
 **Recent Executions:**
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
-| 02 | 01 | 3.2m | 2 | 8 |
 | 02 | 02 | 4.5m | 2 | 10 |
 | 02 | 03 | 2.9m | 1 | 2 |
 | 02 | 05 | 3.1m | 2 | 7 |
 | 02 | 04 | 4.3m | 2 | 5 |
 | 03 | 03 | 2.5m | 2 | 2 |
+| 03 | 01 | 4.0m | 2 | 9 |
 
 ## Accumulated Context
 
@@ -88,6 +88,9 @@ Recent decisions affecting current work:
 - [Phase 03-03]: Parse host/port/dbname from database URL for PostgreSQL client tool flags
 - [Phase 03-03]: Treat 'already exists' as no-op for idempotent database create command
 - [Phase 03-03]: Pass DATABASE_URL env var to seed file for database connection
+- [Phase 03-01]: Separate types.go file prevents FieldError redeclaration across multiple resources
+- [Phase 03-01]: Bob query mods use sm.QueryMod[*psql.SelectQuery] generic type for type safety
+- [Phase 03-01]: Type-specific query filters: string → Contains (ILIKE), numeric/date → GTE/LTE
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-16T20:23:35Z
-Stopped at: Completed 03-03-PLAN.md
-Resume file: Phase 03 plan 03 complete - Database management CLI
+Last session: 2026-02-16T20:25:00Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: Phase 03 plan 01 complete - Validation and query builder generation

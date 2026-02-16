@@ -32,6 +32,16 @@ func Generate(resources []parser.ResourceIR, cfg GenerateConfig) error {
 		return err
 	}
 
+	// Generate validation functions
+	if err := GenerateValidation(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
+	// Generate query builder mods
+	if err := GenerateQueries(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -109,10 +109,13 @@ Plans:
   5. CORS configuration and rate limiting middleware protect API endpoints
   6. forge routes command lists all registered API routes
   7. forge openapi export successfully exports the OpenAPI spec to a file
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- TBD
+- [ ] 05-01-PLAN.md — Huma API struct templates (inputs, outputs, route registration)
+- [ ] 05-02-PLAN.md — Auth infrastructure and middleware (bearer tokens, API keys, CORS, rate limiting)
+- [ ] 05-03-PLAN.md — API server wiring, Scalar UI docs, and generator orchestrator integration
+- [ ] 05-04-PLAN.md — CLI commands (forge routes, forge openapi export)
 
 ### Phase 6: Hypermedia UI Generation
 **Goal**: Developer gets scaffolded HTML forms and views that use the same action layer as the API
@@ -181,7 +184,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. Code Generation Engine | 0/5 | Planned | - |
 | 3. Query & Data Access | 0/3 | Planned | - |
 | 4. Action Layer & Error Handling | 0/3 | Planned | - |
-| 5. REST API Generation | 0/TBD | Not started | - |
+| 5. REST API Generation | 0/4 | Planned | - |
 | 6. Hypermedia UI Generation | 0/TBD | Not started | - |
 | 7. Advanced Data Features | 0/TBD | Not started | - |
 | 8. Background Jobs & Production Readiness | 0/TBD | Not started | - |

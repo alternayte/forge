@@ -19,6 +19,7 @@ func init() {
 	// Register subcommands
 	rootCmd.AddCommand(newInitCmd())
 	rootCmd.AddCommand(newVersionCmd())
+	rootCmd.AddCommand(newToolCmd())
 }
 
 // Execute runs the root command

@@ -10,30 +10,31 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 1 of 8 (Foundation & Schema DSL)
-Plan: 1 of 5 in current phase
+Plan: 2 of 5 in current phase
 Status: Executing
-Last activity: 2026-02-16 — Completed 01-01-PLAN.md
+Last activity: 2026-02-16 — Completed 01-02-PLAN.md
 
-Progress: [██░░░░░░░░] 20%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 2.5 minutes
-- Total execution time: 0.04 hours
+- Total plans completed: 2
+- Average duration: 2.8 minutes
+- Total execution time: 0.09 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 1 | 2.5m | 2.5m |
+| 01 | 2 | 5.5m | 2.8m |
 
 **Recent Executions:**
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 01 | 01 | 2.5m | 2 | 10 |
+| 01 | 02 | 3.0m | 3 | 8 |
 
 ## Accumulated Context
 
@@ -49,6 +50,9 @@ Recent decisions affecting current work:
 - Scaffolded-once views (resources/) vs always-regenerated (gen/) — Clear ownership boundary
 - [Phase 01]: Fluent method chaining API for schema definition
 - [Phase 01]: SchemaItem marker interface for variadic Define() args
+- [Phase 01-foundation-schema-dsl]: IR uses strings (not enums) for types to decouple from schema package
+- [Phase 01-foundation-schema-dsl]: Error codes use E0xx/E1xx ranges (parser/validation)
+- [Phase 01-foundation-schema-dsl]: Help links use CLI format (forge help E001) for offline-first design
 
 ### Pending Todos
 
@@ -60,6 +64,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-16T15:33:24Z
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-foundation-schema-dsl/01-02-PLAN.md
+Last session: 2026-02-16T15:34:12Z
+Stopped at: Completed 01-02-PLAN.md
+Resume file: .planning/phases/01-foundation-schema-dsl/01-03-PLAN.md

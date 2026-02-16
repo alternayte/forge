@@ -103,22 +103,23 @@ func Header(msg string) string {
 // Grouped renders a header followed by indented items (Cargo-style grouped output).
 // Example:
 //
-//	Compiling resources
-//	  ✓ Product
-//	  ✓ Category
-//	  ✓ User
+//	Files:
+//	  forge.toml
+//	  main.go
 func Grouped(header string, items []string) string {
 	var b strings.Builder
 
-	// Render header
+	// Render header (indented)
+	b.WriteString("  ")
 	b.WriteString(Header(header))
 	b.WriteString("\n")
 
-	// Render items with indentation
+	// Render items with double indentation
 	for _, item := range items {
+		b.WriteString("    ")
 		b.WriteString(item)
 		b.WriteString("\n")
 	}
 
-	return b.String()
+	return strings.TrimSuffix(b.String(), "\n")
 }

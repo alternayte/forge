@@ -1,0 +1,12 @@
+package {{.ExampleResource}}
+
+import "{{.Module}}/gen/schema"
+
+// {{.ExampleResourceTitle}} resource definition
+var {{.ExampleResourceTitle}} = schema.Define("{{.ExampleResourceTitle}}",
+	schema.UUID("ID").PrimaryKey(),
+	schema.String("Name").Required().MaxLen(200).Label("Name").Placeholder("Enter name"),
+	schema.Text("Description").Help("Detailed description"),
+	schema.Bool("Active").Default(true),
+	schema.Timestamps(),
+)

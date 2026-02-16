@@ -10,35 +10,35 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 2 of 8 (Code Generation Engine)
-Plan: 2 of 5 in current phase
+Plan: 5 of 5 in current phase
 Status: In Progress
-Last activity: 2026-02-16 — Completed 02-02-PLAN.md
+Last activity: 2026-02-16 — Completed 02-05-PLAN.md
 
 Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 3.7 minutes
-- Total execution time: 0.49 hours
+- Total plans completed: 9
+- Average duration: 3.6 minutes
+- Total execution time: 0.54 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 5 | 18.9m | 3.8m |
-| 02 | 3 | 10.6m | 3.5m |
+| 02 | 4 | 13.7m | 3.4m |
 
 **Recent Executions:**
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
-| 01 | 04 | 3.4m | 2 | 16 |
 | 01 | 05 | 4.0m | 2 | 7 |
 | 02 | 01 | 3.2m | 2 | 8 |
 | 02 | 02 | 4.5m | 2 | 10 |
 | 02 | 03 | 2.9m | 1 | 2 |
+| 02 | 05 | 3.1m | 2 | 7 |
 
 ## Accumulated Context
 
@@ -74,6 +74,10 @@ Recent decisions affecting current work:
 - [Phase 02-02]: MaxLen modifier overrides default varchar(255) length for String/Email/Slug types
 - [Phase 02-03]: Only display generated directories that exist (no "0 files" noise)
 - [Phase 02-03]: Clean gen/ directory before generation for idempotent output
+- [Phase 02-05]: 300ms debounce for file changes to batch multi-file saves
+- [Phase 02-05]: Skip Chmod events unconditionally (always noise from Spotlight/antivirus/editors)
+- [Phase 02-05]: Watch parent directories not individual files (handles atomic writes correctly)
+- [Phase 02-05]: Exclude gen/ paths from triggering regeneration (prevent infinite loops)
 
 ### Pending Todos
 
@@ -85,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-16T17:34:08Z
-Stopped at: Completed 02-02-PLAN.md
-Resume file: Phase 02 plan 02 complete - Atlas schema and factory generation
+Last session: 2026-02-16T18:40:35Z
+Stopped at: Completed 02-05-PLAN.md
+Resume file: Phase 02 plan 05 complete - forge dev with file watching

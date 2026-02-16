@@ -216,13 +216,125 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | | |
+| SCHEMA-01 | Phase 1 | Pending |
+| SCHEMA-02 | Phase 1 | Pending |
+| SCHEMA-03 | Phase 1 | Pending |
+| SCHEMA-04 | Phase 1 | Pending |
+| SCHEMA-05 | Phase 1 | Pending |
+| SCHEMA-06 | Phase 1 | Pending |
+| SCHEMA-07 | Phase 7 | Pending |
+| SCHEMA-08 | Phase 7 | Pending |
+| SCHEMA-09 | Phase 8 | Pending |
+| PARSE-01 | Phase 1 | Pending |
+| PARSE-02 | Phase 1 | Pending |
+| PARSE-03 | Phase 1 | Pending |
+| GEN-01 | Phase 2 | Pending |
+| GEN-02 | Phase 3 | Pending |
+| GEN-03 | Phase 3 | Pending |
+| GEN-04 | Phase 2 | Pending |
+| GEN-05 | Phase 4 | Pending |
+| GEN-06 | Phase 5 | Pending |
+| GEN-07 | Phase 5 | Pending |
+| GEN-08 | Phase 2 | Pending |
+| GEN-09 | Phase 6 | Pending |
+| GEN-10 | Phase 6 | Pending |
+| GEN-11 | Phase 2 | Pending |
+| GEN-12 | Phase 6 | Pending |
+| GEN-13 | Phase 2 | Pending |
+| MIGRATE-01 | Phase 2 | Pending |
+| MIGRATE-02 | Phase 2 | Pending |
+| MIGRATE-03 | Phase 2 | Pending |
+| MIGRATE-04 | Phase 2 | Pending |
+| MIGRATE-05 | Phase 2 | Pending |
+| MIGRATE-06 | Phase 2 | Pending |
+| DATA-01 | Phase 3 | Pending |
+| DATA-02 | Phase 3 | Pending |
+| DATA-03 | Phase 3 | Pending |
+| DATA-04 | Phase 3 | Pending |
+| DATA-05 | Phase 7 | Pending |
+| DATA-06 | Phase 7 | Pending |
+| DATA-07 | Phase 7 | Pending |
+| DATA-08 | Phase 7 | Pending |
+| DATA-09 | Phase 7 | Pending |
+| DATA-10 | Phase 3 | Pending |
+| DATA-11 | Phase 3 | Pending |
+| DATA-12 | Phase 7 | Pending |
+| ACTION-01 | Phase 4 | Pending |
+| ACTION-02 | Phase 4 | Pending |
+| ACTION-03 | Phase 4 | Pending |
+| ACTION-04 | Phase 4 | Pending |
+| ACTION-05 | Phase 4 | Pending |
+| ACTION-06 | Phase 4 | Pending |
+| ACTION-07 | Phase 4 | Pending |
+| ERR-01 | Phase 4 | Pending |
+| ERR-02 | Phase 4 | Pending |
+| ERR-03 | Phase 4 | Pending |
+| ERR-04 | Phase 4 | Pending |
+| HTML-01 | Phase 6 | Pending |
+| HTML-02 | Phase 6 | Pending |
+| HTML-03 | Phase 6 | Pending |
+| HTML-04 | Phase 6 | Pending |
+| HTML-05 | Phase 6 | Pending |
+| HTML-06 | Phase 6 | Pending |
+| HTML-07 | Phase 6 | Pending |
+| API-01 | Phase 5 | Pending |
+| API-02 | Phase 5 | Pending |
+| API-03 | Phase 5 | Pending |
+| API-04 | Phase 5 | Pending |
+| API-05 | Phase 5 | Pending |
+| API-06 | Phase 5 | Pending |
+| API-07 | Phase 5 | Pending |
+| API-08 | Phase 5 | Pending |
+| API-09 | Phase 5 | Pending |
+| API-10 | Phase 5 | Pending |
+| AUTH-01 | Phase 6 | Pending |
+| AUTH-02 | Phase 6 | Pending |
+| AUTH-03 | Phase 6 | Pending |
+| AUTH-04 | Phase 5 | Pending |
+| AUTH-05 | Phase 7 | Pending |
+| AUTH-06 | Phase 7 | Pending |
+| TENANT-01 | Phase 7 | Pending |
+| TENANT-02 | Phase 7 | Pending |
+| TENANT-03 | Phase 7 | Pending |
+| TENANT-04 | Phase 7 | Pending |
+| JOBS-01 | Phase 8 | Pending |
+| JOBS-02 | Phase 8 | Pending |
+| JOBS-03 | Phase 8 | Pending |
+| JOBS-04 | Phase 8 | Pending |
+| AUDIT-01 | Phase 7 | Pending |
+| AUDIT-02 | Phase 7 | Pending |
+| AUDIT-03 | Phase 7 | Pending |
+| SSE-01 | Phase 8 | Pending |
+| SSE-02 | Phase 8 | Pending |
+| SSE-03 | Phase 8 | Pending |
+| SSE-04 | Phase 8 | Pending |
+| SSE-05 | Phase 8 | Pending |
+| SSE-06 | Phase 8 | Pending |
+| TEST-01 | Phase 6 | Pending |
+| TEST-02 | Phase 6 | Pending |
+| TEST-03 | Phase 6 | Pending |
+| TEST-04 | Phase 6 | Pending |
+| CLI-01 | Phase 1 | Pending |
+| CLI-02 | Phase 2 | Pending |
+| CLI-03 | Phase 8 | Pending |
+| CLI-04 | Phase 3 | Pending |
+| CLI-05 | Phase 5 | Pending |
+| CLI-06 | Phase 1 | Pending |
+| CLI-07 | Phase 8 | Pending |
+| DEPLOY-01 | Phase 8 | Pending |
+| DEPLOY-02 | Phase 8 | Pending |
+| DEPLOY-03 | Phase 8 | Pending |
+| DEPLOY-04 | Phase 1 | Pending |
+| DEPLOY-05 | Phase 6 | Pending |
+| OTEL-01 | Phase 8 | Pending |
+| OTEL-02 | Phase 8 | Pending |
+| OTEL-03 | Phase 8 | Pending |
 
 **Coverage:**
 - v1 requirements: 89 total
-- Mapped to phases: 0
-- Unmapped: 89
+- Mapped to phases: 89
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-16*
-*Last updated: 2026-02-16 after initial definition*
+*Last updated: 2026-02-16 after roadmap creation*

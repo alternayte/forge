@@ -20,6 +20,7 @@ func init() {
 	rootCmd.AddCommand(newInitCmd())
 	rootCmd.AddCommand(newVersionCmd())
 	rootCmd.AddCommand(newToolCmd())
+	rootCmd.AddCommand(newGenerateCmd())
 }
 
 // Execute runs the root command

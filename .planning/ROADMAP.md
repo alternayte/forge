@@ -33,10 +33,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Parser produces clear error messages pointing to exact line numbers when schemas use dynamic values
   4. Project can be initialized with forge init creating proper directory structure and forge.toml
   5. Required tool binaries (templ, sqlc, tailwind, atlas) can be downloaded via forge tool sync
-**Plans**: TBD
+**Plans:** 5 plans
 
 Plans:
-- TBD
+- [ ] 01-01-PLAN.md — Schema DSL package (field types, modifiers, relationships, options, Define)
+- [ ] 01-02-PLAN.md — IR types, rich error diagnostics, and terminal UI styles
+- [ ] 01-03-PLAN.md — go/ast parser (TDD: parse schemas into IR with error collection)
+- [ ] 01-04-PLAN.md — Cobra CLI skeleton and forge init scaffolding
+- [ ] 01-05-PLAN.md — forge tool sync (binary download and management)
 
 ### Phase 2: Code Generation Engine
 **Goal**: Developer runs forge generate and gets compilable Go models with migrations and proper code quality
@@ -161,11 +165,11 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Schema DSL | 0/TBD | Not started | - |
+| 1. Foundation & Schema DSL | 0/5 | Planned | - |
 | 2. Code Generation Engine | 0/TBD | Not started | - |
 | 3. Query & Data Access | 0/TBD | Not started | - |
 | 4. Action Layer & Error Handling | 0/TBD | Not started | - |

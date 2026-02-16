@@ -19,6 +19,9 @@ func BuildFuncMap() template.FuncMap {
 		"hasModifier":      hasModifier,
 		"getModifierValue": getModifierValue,
 		"isRequired":       isRequired,
+		"isIDField":        isIDField,
+		"isFilterable":     isFilterable,
+		"isSortable":       isSortable,
 	}
 }
 
@@ -89,13 +92,29 @@ func camel(s string) string {
 
 // snake converts PascalCase to snake_case.
 func snake(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+
 	var result strings.Builder
-	for i, r := range s {
+	runes := []rune(s)
+
+	for i, r := range runes {
+		// Add underscore before uppercase letter if:
+		// 1. Not the first character
+		// 2. Previous character is lowercase OR next character is lowercase (handles HTTPStatus -> http_status)
 		if i > 0 && r >= 'A' && r <= 'Z' {
-			result.WriteRune('_')
+			prev := runes[i-1]
+			// Add underscore if previous was lowercase or if this is start of acronym followed by lowercase
+			if prev >= 'a' && prev <= 'z' {
+				result.WriteRune('_')
+			} else if i+1 < len(runes) && runes[i+1] >= 'a' && runes[i+1] <= 'z' {
+				result.WriteRune('_')
+			}
 		}
 		result.WriteRune(r)
 	}
+
 	return strings.ToLower(result.String())
 }
 
@@ -122,4 +141,19 @@ func getModifierValue(modifiers []parser.ModifierIR, name string) interface{} {
 // isRequired checks if the Required modifier is present.
 func isRequired(modifiers []parser.ModifierIR) bool {
 	return hasModifier(modifiers, "Required")
+}
+
+// isIDField checks if a field is the ID field (name="ID" and type="UUID").
+func isIDField(field parser.FieldIR) bool {
+	return field.Name == "ID" && field.Type == "UUID"
+}
+
+// isFilterable checks if a field has the Filterable modifier.
+func isFilterable(modifiers []parser.ModifierIR) bool {
+	return hasModifier(modifiers, "Filterable")
+}
+
+// isSortable checks if a field has the Sortable modifier.
+func isSortable(modifiers []parser.ModifierIR) bool {
+	return hasModifier(modifiers, "Sortable")
 }

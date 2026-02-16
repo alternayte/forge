@@ -17,10 +17,12 @@ type GenerateConfig struct {
 
 // Generate orchestrates all code generation from parsed resources.
 func Generate(resources []parser.ResourceIR, cfg GenerateConfig) error {
-	// GenerateModels will be implemented in Task 2
+	// Generate model types
+	if err := GenerateModels(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
 	// Later tasks will add GenerateAtlasSchema, GenerateFactories, etc.
-	_ = resources
-	_ = cfg
 	return nil
 }
 

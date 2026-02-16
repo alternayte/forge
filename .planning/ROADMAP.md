@@ -73,10 +73,12 @@ Plans:
   4. Developer can write raw SQLC queries in queries/custom/ as an escape hatch
   5. forge.Transaction wraps operations in database transactions
   6. forge db commands (create, drop, seed, console, reset) successfully manage development database
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- TBD
+- [ ] 03-01-PLAN.md — Validation function generation and query builder mod generation
+- [ ] 03-02-PLAN.md — Pagination utilities, SQLC config, and transaction wrapper generation
+- [ ] 03-03-PLAN.md — forge db CLI commands (create, drop, seed, console, reset)
 
 ### Phase 4: Action Layer & Error Handling
 **Goal**: Both HTML and API handlers call the same action layer (no business logic duplication)
@@ -175,7 +177,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 |-------|----------------|--------|-----------|
 | 1. Foundation & Schema DSL | 0/5 | Planned | - |
 | 2. Code Generation Engine | 0/5 | Planned | - |
-| 3. Query & Data Access | 0/TBD | Not started | - |
+| 3. Query & Data Access | 0/3 | Planned | - |
 | 4. Action Layer & Error Handling | 0/TBD | Not started | - |
 | 5. REST API Generation | 0/TBD | Not started | - |
 | 6. Hypermedia UI Generation | 0/TBD | Not started | - |

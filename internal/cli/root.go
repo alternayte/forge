@@ -22,6 +22,7 @@ func init() {
 	rootCmd.AddCommand(newToolCmd())
 	rootCmd.AddCommand(newGenerateCmd())
 	rootCmd.AddCommand(newMigrateCmd())
+	rootCmd.AddCommand(newDBCmd())
 	rootCmd.AddCommand(newDevCmd())
 }
 

@@ -29,6 +29,11 @@ func BuildFuncMap() template.FuncMap {
 		"atlasDefault":           atlasDefault,
 		"hasDefault":             hasDefault,
 		"defaultTestValue":       defaultTestValue,
+		"zeroValue":              zeroValue,
+		"enumValues":             enumValues,
+		"hasMinLen":              hasMinLen,
+		"getMinLen":              getMinLen,
+		"getMaxLen":              getMaxLen,
 	}
 }
 
@@ -296,4 +301,48 @@ func defaultTestValue(field parser.FieldIR) string {
 	default:
 		return `""`
 	}
+}
+
+// zeroValue returns the Go zero value for a field type.
+func zeroValue(fieldType string) string {
+	switch fieldType {
+	case "UUID":
+		return "uuid.UUID{}"
+	case "String", "Text", "Enum", "Slug", "Email", "URL":
+		return `""`
+	case "Int":
+		return "0"
+	case "BigInt":
+		return "0"
+	case "Decimal":
+		return "decimal.Zero"
+	case "Bool":
+		return "false"
+	case "DateTime", "Date":
+		return "time.Time{}"
+	case "JSON":
+		return "nil"
+	default:
+		return "nil"
+	}
+}
+
+// enumValues returns the enum values for a field.
+func enumValues(field parser.FieldIR) []string {
+	return field.EnumValues
+}
+
+// hasMinLen checks if a field has a MinLen modifier.
+func hasMinLen(modifiers []parser.ModifierIR) bool {
+	return hasModifier(modifiers, "MinLen")
+}
+
+// getMinLen retrieves the MinLen modifier value.
+func getMinLen(modifiers []parser.ModifierIR) interface{} {
+	return getModifierValue(modifiers, "MinLen")
+}
+
+// getMaxLen retrieves the MaxLen modifier value.
+func getMaxLen(modifiers []parser.ModifierIR) interface{} {
+	return getModifierValue(modifiers, "MaxLen")
 }

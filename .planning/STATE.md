@@ -11,34 +11,34 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 
 Phase: 2 of 8 (Code Generation Engine)
 Plan: 5 of 5 in current phase
-Status: In Progress
-Last activity: 2026-02-16 — Completed 02-05-PLAN.md
+Status: Complete
+Last activity: 2026-02-16 — Completed 02-04-PLAN.md (executed after 02-05)
 
 Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 3.6 minutes
-- Total execution time: 0.54 hours
+- Total plans completed: 10
+- Average duration: 3.7 minutes
+- Total execution time: 0.58 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 5 | 18.9m | 3.8m |
-| 02 | 4 | 13.7m | 3.4m |
+| 02 | 5 | 18.0m | 3.6m |
 
 **Recent Executions:**
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
-| 01 | 05 | 4.0m | 2 | 7 |
 | 02 | 01 | 3.2m | 2 | 8 |
 | 02 | 02 | 4.5m | 2 | 10 |
 | 02 | 03 | 2.9m | 1 | 2 |
 | 02 | 05 | 3.1m | 2 | 7 |
+| 02 | 04 | 4.3m | 2 | 5 |
 
 ## Accumulated Context
 
@@ -74,6 +74,10 @@ Recent decisions affecting current work:
 - [Phase 02-02]: MaxLen modifier overrides default varchar(255) length for String/Email/Slug types
 - [Phase 02-03]: Only display generated directories that exist (no "0 files" noise)
 - [Phase 02-03]: Clean gen/ directory before generation for idempotent output
+- [Phase 02-04]: Use same database URL for dev-url in Atlas diff (Atlas creates temporary schemas)
+- [Phase 02-04]: Delete rejected migration files on destructive warning (Atlas creates file before we can check it)
+- [Phase 02-04]: Regex-based destructive detection instead of SQL parsing (simple patterns cover 95% of cases)
+- [Phase 02-04]: Include line numbers in destructive change warnings (easy to locate problematic SQL)
 - [Phase 02-05]: 300ms debounce for file changes to batch multi-file saves
 - [Phase 02-05]: Skip Chmod events unconditionally (always noise from Spotlight/antivirus/editors)
 - [Phase 02-05]: Watch parent directories not individual files (handles atomic writes correctly)
@@ -89,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-16T18:40:35Z
-Stopped at: Completed 02-05-PLAN.md
-Resume file: Phase 02 plan 05 complete - forge dev with file watching
+Last session: 2026-02-16T17:41:18Z
+Stopped at: Completed 02-04-PLAN.md
+Resume file: Phase 02 plan 04 complete - Atlas migration management

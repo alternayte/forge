@@ -58,6 +58,21 @@ func Generate(resources []parser.ResourceIR, cfg GenerateConfig) error {
 		return err
 	}
 
+	// Generate error types and DB error mapping
+	if err := GenerateErrors(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
+	// Generate action interfaces and default implementations
+	if err := GenerateActions(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
+	// Generate middleware (panic recovery, error rendering)
+	if err := GenerateMiddleware(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
 	return nil
 }
 

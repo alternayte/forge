@@ -11,23 +11,24 @@ import (
 // BuildFuncMap returns a FuncMap with all template helper functions.
 func BuildFuncMap() template.FuncMap {
 	return template.FuncMap{
-		"goType":                goType,
-		"goPointerType":         goPointerType,
-		"lower":                 lower,
-		"plural":                plural,
-		"camel":                 camel,
-		"snake":                 snake,
-		"hasModifier":           hasModifier,
-		"getModifierValue":      getModifierValue,
-		"isRequired":            isRequired,
-		"isIDField":             isIDField,
-		"isFilterable":          isFilterable,
-		"isSortable":            isSortable,
-		"atlasType":             atlasType,
+		"goType":                 goType,
+		"goPointerType":          goPointerType,
+		"lower":                  lower,
+		"plural":                 plural,
+		"camel":                  camel,
+		"snake":                  snake,
+		"hasModifier":            hasModifier,
+		"getModifierValue":       getModifierValue,
+		"isRequired":             isRequired,
+		"isIDField":              isIDField,
+		"isFilterable":           isFilterable,
+		"isSortable":             isSortable,
+		"atlasType":              atlasType,
 		"atlasTypeWithModifiers": atlasTypeWithModifiers,
-		"atlasNull":             atlasNull,
-		"atlasDefault":          atlasDefault,
-		"hasDefault":            hasDefault,
+		"atlasNull":              atlasNull,
+		"atlasDefault":           atlasDefault,
+		"hasDefault":             hasDefault,
+		"defaultTestValue":       defaultTestValue,
 	}
 }
 
@@ -255,4 +256,44 @@ func atlasDefault(field parser.FieldIR) string {
 // hasDefault checks if a field has a Default modifier.
 func hasDefault(field parser.FieldIR) bool {
 	return hasModifier(field.Modifiers, "Default")
+}
+
+// defaultTestValue returns a reasonable default test value for a field type.
+func defaultTestValue(field parser.FieldIR) string {
+	switch field.Type {
+	case "UUID":
+		return "uuid.New()"
+	case "String":
+		return fmt.Sprintf(`"test-%s"`, snake(field.Name))
+	case "Text":
+		return fmt.Sprintf(`"Test %s content"`, field.Name)
+	case "Int":
+		return "42"
+	case "BigInt":
+		return "100000"
+	case "Decimal":
+		return "decimal.NewFromFloat(9.99)"
+	case "Bool":
+		return "true"
+	case "DateTime":
+		return "time.Now()"
+	case "Date":
+		return "time.Now()"
+	case "Enum":
+		// Use first enum value if available, otherwise "default"
+		if len(field.EnumValues) > 0 {
+			return fmt.Sprintf(`"%s"`, field.EnumValues[0])
+		}
+		return `"default"`
+	case "JSON":
+		return `json.RawMessage("{}")`
+	case "Slug":
+		return `"test-slug"`
+	case "Email":
+		return `"test@example.com"`
+	case "URL":
+		return `"https://example.com"`
+	default:
+		return `""`
+	}
 }

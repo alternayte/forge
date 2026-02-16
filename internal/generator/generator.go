@@ -22,7 +22,16 @@ func Generate(resources []parser.ResourceIR, cfg GenerateConfig) error {
 		return err
 	}
 
-	// Later tasks will add GenerateAtlasSchema, GenerateFactories, etc.
+	// Generate Atlas HCL schema
+	if err := GenerateAtlasSchema(resources, cfg.OutputDir); err != nil {
+		return err
+	}
+
+	// Generate test factories
+	if err := GenerateFactories(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -67,3 +67,63 @@ func TestGenerateSQLCConfig(t *testing.T) {
 		t.Error("Generated sqlc.yaml does not start with version field")
 	}
 }
+
+func TestGenerateTransaction(t *testing.T) {
+	// Create temporary directory for output
+	tempDir := t.TempDir()
+
+	// Mock resource (transaction wrapper is generic, doesn't use resource data)
+	resources := []parser.ResourceIR{
+		{
+			Name: "Product",
+			Fields: []parser.FieldIR{
+				{Name: "ID", Type: "UUID"},
+			},
+		},
+	}
+
+	// Generate transaction wrapper
+	err := GenerateTransaction(resources, tempDir, "testmodule")
+	if err != nil {
+		t.Fatalf("GenerateTransaction failed: %v", err)
+	}
+
+	// Verify transaction.go was created
+	transactionPath := filepath.Join(tempDir, "forge", "transaction.go")
+	if _, err := os.Stat(transactionPath); os.IsNotExist(err) {
+		t.Fatalf("transaction.go was not created at %s", transactionPath)
+	}
+
+	// Read generated content
+	content, err := os.ReadFile(transactionPath)
+	if err != nil {
+		t.Fatalf("Failed to read transaction.go: %v", err)
+	}
+
+	contentStr := string(content)
+
+	// Verify it contains expected functions and imports
+	expectedElements := []string{
+		"package forge",
+		"type DB interface",
+		"type TransactionFunc",
+		"func Transaction",
+		"func TransactionWithJobs",
+		"pgx.BeginFunc",
+		"github.com/jackc/pgx/v5",
+		"github.com/jackc/pgx/v5/pgxpool",
+		"github.com/riverqueue/river",
+		"InsertTx",
+	}
+
+	for _, expected := range expectedElements {
+		if !strings.Contains(contentStr, expected) {
+			t.Errorf("Generated transaction.go missing expected element: %s", expected)
+		}
+	}
+
+	// Verify generated code has DO NOT EDIT header
+	if !strings.HasPrefix(contentStr, "// Code generated") {
+		t.Error("Generated file missing DO NOT EDIT header")
+	}
+}

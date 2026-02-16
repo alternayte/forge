@@ -91,6 +91,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	err = generator.Generate(result.Resources, generator.GenerateConfig{
 		OutputDir:     genDir,
 		ProjectModule: cfg.Project.Module,
+		ProjectRoot:   projectRoot,
 	})
 	if err != nil {
 		return fmt.Errorf("code generation failed: %w", err)

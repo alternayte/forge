@@ -13,6 +13,7 @@ import (
 type GenerateConfig struct {
 	OutputDir     string // Output directory for generated files
 	ProjectModule string // Go module path of the generated project
+	ProjectRoot   string // Project root directory (parent of OutputDir)
 }
 
 // Generate orchestrates all code generation from parsed resources.
@@ -39,6 +40,21 @@ func Generate(resources []parser.ResourceIR, cfg GenerateConfig) error {
 
 	// Generate query builder mods
 	if err := GenerateQueries(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
+	// Generate pagination utilities
+	if err := GeneratePagination(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
+	// Generate transaction wrapper
+	if err := GenerateTransaction(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
+	// Generate SQLC configuration
+	if err := GenerateSQLCConfig(resources, cfg.OutputDir, cfg.ProjectModule, cfg.ProjectRoot); err != nil {
 		return err
 	}
 

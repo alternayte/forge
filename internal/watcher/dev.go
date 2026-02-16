@@ -129,6 +129,7 @@ func (d *DevServer) runGeneration() error {
 	genCfg := generator.GenerateConfig{
 		OutputDir:     filepath.Join(d.ProjectRoot, "gen"),
 		ProjectModule: d.Config.Project.Module,
+		ProjectRoot:   d.ProjectRoot,
 	}
 
 	if err := generator.Generate(result.Resources, genCfg); err != nil {

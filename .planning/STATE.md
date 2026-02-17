@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 6 of 8 (Hypermedia UI Generation)
-Plan: 8 of 9 in current phase (05 completed out of order)
+Plan: 9 of 9 in current phase (06 completed; 06-06 latest)
 Status: In Progress
-Last activity: 2026-02-17 — Completed 06-05-PLAN.md (OAuth2 providers via Goth + pgxstore sessions table in Atlas HCL)
+Last activity: 2026-02-17 — Completed 06-06-PLAN.md (ScaffoldResource and DiffResource with skip-if-exists and diffmatchpatch)
 
-Progress: [██████░░░░] 48%
+Progress: [███████░░░] 54%
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Progress: [██████░░░░] 48%
 | 03 | 02 | 3.7m | 2 | 10 |
 | Phase 06 P05 | 2 | 2 tasks | 4 files |
 | Phase 06 P03 | 5 | 2 tasks | 4 files |
+| Phase 06 P06 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -150,6 +151,7 @@ Recent decisions affecting current work:
 - [Phase 06]: Role guard uses role == '' || role == 'value' pattern — empty role ensures fields visible in admin/dev contexts
 - [Phase 06]: Mutability modifier generates editable-vs-readonly conditional rather than hiding — data visible to all, editable only by matching role
 - [Phase 06]: Filter section only rendered when filterableFields helper returns non-empty slice — avoids empty filter UI
+- [Phase 06]: DiffResource uses dmp.DiffPrettyText for human-readable output (not patch format) — intended for CLI display
 
 ### Pending Todos
 
@@ -162,5 +164,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-03-PLAN.md (scaffold form, list, detail templ templates with Datastar SSE and role-based guards)
-Resume file: .planning/phases/06-hypermedia-ui-generation/06-04-PLAN.md
+Stopped at: Completed 06-06-PLAN.md (ScaffoldResource and DiffResource with skip-if-exists and diffmatchpatch)
+Resume file: .planning/phases/06-hypermedia-ui-generation/06-07-PLAN.md

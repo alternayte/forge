@@ -38,6 +38,7 @@ Progress: [██████░░░░] 48%
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 05 | 04 | 4m | 2 | 3 |
+| 05 | 03 | 5m | 2 | 6 |
 | 05 | 01 | 5m | 2 | 8 |
 | 05 | 02 | 3m | 2 | 6 |
 | 04 | 03 | 2.1m | 2 | 5 |
@@ -119,6 +120,9 @@ Recent decisions affecting current work:
 - [Phase 05-02]: validateBearerToken/validateAPIKey return updated huma.Context (not mutate) to thread context through middleware chain
 - [Phase 05-02]: Phase 5 rate limiting uses Default tier for all requests — tiered enforcement deferred to Plan 03 server assembly
 - [Phase 05-02]: CORSMiddleware logs warning and disables credentials when wildcard origin combined with AllowCredentials (CORS spec violation guard)
+- [Phase 05-03]: SetupAPI accepts func(huma.API) for route registration (not func(huma.API, *actions.Registry)) — gen/actions is user-generated code, forge tool cannot import it; caller uses a closure
+- [Phase 05-03]: wrapHTTPMiddleware uses humachi.Unwrap to bridge http.Handler middlewares (CORS, rate limit) into Huma middleware chain
+- [Phase 05-03]: api_register_all.go.tmpl uses registry.Get(name) with type assertion to {Name}Actions — generated dispatcher, not per-resource
 - [Phase 05-04]: Build huma.OpenAPI struct directly from IR (no HTTP adapter) for spec export — avoids adding chi or net/http dependencies to CLI
 - [Phase 05-04]: apiRoutes() separated from runRoutes() so Phase 6 can add htmlRoutes() to same forge routes output without refactoring
 - [Phase 05-04]: routeKebab/routePlural/routeLowerCamel duplicated in cli package (not imported from generator) to keep packages independent

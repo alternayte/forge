@@ -25,6 +25,10 @@ func init() {
 	rootCmd.AddCommand(newDBCmd())
 	rootCmd.AddCommand(newDevCmd())
 	rootCmd.AddCommand(newRoutesCmd())
+
+	openapiCmd := newOpenapiCmd()
+	openapiCmd.AddCommand(newOpenapiExportCmd())
+	rootCmd.AddCommand(openapiCmd)
 }
 
 // Execute runs the root command

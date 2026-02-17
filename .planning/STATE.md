@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 5 of 8 (REST API Generation)
-Plan: 2 of 3 in current phase
+Plan: 4 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-17 — Completed 05-02-PLAN.md
+Last activity: 2026-02-17 — Completed 05-04-PLAN.md
 
-Progress: [█████░░░░░] 40%
+Progress: [██████░░░░] 48%
 
 ## Performance Metrics
 
@@ -31,12 +31,13 @@ Progress: [█████░░░░░] 40%
 | 02 | 5 | 18.0m | 3.6m |
 | 03 | 3 | 10.2m | 3.4m |
 | 04 | 3 | 6.1m | 2.0m |
-| 05 | 3 (so far) | ~11m | ~3.7m |
+| 05 | 4 (so far) | ~15m | ~3.8m |
 
 **Recent Executions:**
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
+| 05 | 04 | 4m | 2 | 3 |
 | 05 | 01 | 5m | 2 | 8 |
 | 05 | 02 | 3m | 2 | 6 |
 | 04 | 03 | 2.1m | 2 | 5 |
@@ -118,6 +119,9 @@ Recent decisions affecting current work:
 - [Phase 05-02]: validateBearerToken/validateAPIKey return updated huma.Context (not mutate) to thread context through middleware chain
 - [Phase 05-02]: Phase 5 rate limiting uses Default tier for all requests — tiered enforcement deferred to Plan 03 server assembly
 - [Phase 05-02]: CORSMiddleware logs warning and disables credentials when wildcard origin combined with AllowCredentials (CORS spec violation guard)
+- [Phase 05-04]: Build huma.OpenAPI struct directly from IR (no HTTP adapter) for spec export — avoids adding chi or net/http dependencies to CLI
+- [Phase 05-04]: apiRoutes() separated from runRoutes() so Phase 6 can add htmlRoutes() to same forge routes output without refactoring
+- [Phase 05-04]: routeKebab/routePlural/routeLowerCamel duplicated in cli package (not imported from generator) to keep packages independent
 
 ### Pending Todos
 
@@ -130,5 +134,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 05-01-PLAN.md (Huma API templates and GenerateAPI function)
-Resume file: .planning/phases/05-rest-api-generation/05-02-PLAN.md
+Stopped at: Completed 05-04-PLAN.md (CLI routes and OpenAPI export commands)
+Resume file: .planning/phases/06-html-generation/06-01-PLAN.md

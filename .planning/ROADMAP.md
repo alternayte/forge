@@ -131,10 +131,18 @@ Plans:
   7. Generated test factories create valid resource instances with builder pattern
   8. forgetest.NewTestDB and forgetest.NewApp enable HTTP testing
   9. Tailwind CSS compiles via standalone CLI binary (zero npm dependency verified)
-**Plans**: TBD
+**Plans:** 9 plans
 
 Plans:
-- TBD
+- [ ] 06-01-PLAN.md — Form primitives library (FormField, TextInput, etc.) and Datastar SSE helpers
+- [ ] 06-02-PLAN.md — Session auth (SCS + pgxstore, bcrypt, HTML auth middleware)
+- [ ] 06-03-PLAN.md — Templ view scaffold templates (form, list, detail)
+- [ ] 06-04-PLAN.md — HTML handler scaffold templates and route registration
+- [ ] 06-05-PLAN.md — OAuth2 providers (Goth) and sessions table
+- [ ] 06-06-PLAN.md — Scaffold generator (ScaffoldResource, DiffResource) and tests
+- [ ] 06-07-PLAN.md — Testing infrastructure (forgetest: NewTestDB, NewApp, PostDatastar)
+- [ ] 06-08-PLAN.md — HTML generation orchestrator and htmlRoutes() CLI
+- [ ] 06-09-PLAN.md — forge generate resource CLI, HTML server wiring, Tailwind compilation
 
 ### Phase 7: Advanced Data Features
 **Goal**: Developer can use relationships, soft delete, multi-tenancy, permissions, and audit logging from schema annotations
@@ -185,6 +193,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. Query & Data Access | 0/3 | Planned | - |
 | 4. Action Layer & Error Handling | 0/3 | Planned | - |
 | 5. REST API Generation | 0/4 | Planned | - |
-| 6. Hypermedia UI Generation | 0/TBD | Not started | - |
+| 6. Hypermedia UI Generation | 0/9 | Not started | - |
 | 7. Advanced Data Features | 0/TBD | Not started | - |
 | 8. Background Jobs & Production Readiness | 0/TBD | Not started | - |

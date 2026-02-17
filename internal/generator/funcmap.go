@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/forge-framework/forge/internal/parser"
 )
@@ -34,6 +35,15 @@ func BuildFuncMap() template.FuncMap {
 		"hasMinLen":              hasMinLen,
 		"getMinLen":              getMinLen,
 		"getMaxLen":              getMaxLen,
+		// API generation helpers
+		"kebab":               kebab,
+		"lowerCamel":          lowerCamel,
+		"humaValidationTag":   humaValidationTag,
+		"sortableFieldNames":  sortableFieldNames,
+		"filterableFields":    filterableFields,
+		"buildLinkHeader":     buildLinkHeader,
+		"not":                 not,
+		"join":                join,
 	}
 }
 
@@ -345,4 +355,105 @@ func getMinLen(modifiers []parser.ModifierIR) interface{} {
 // getMaxLen retrieves the MaxLen modifier value.
 func getMaxLen(modifiers []parser.ModifierIR) interface{} {
 	return getModifierValue(modifiers, "MaxLen")
+}
+
+// kebab converts PascalCase to kebab-case (e.g., "BlogPost" -> "blog-post").
+// Used for URL paths in route registration.
+func kebab(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+
+	var result strings.Builder
+	runes := []rune(s)
+
+	for i, r := range runes {
+		if i > 0 && unicode.IsUpper(r) {
+			prev := runes[i-1]
+			if unicode.IsLower(prev) {
+				result.WriteRune('-')
+			} else if i+1 < len(runes) && unicode.IsLower(runes[i+1]) {
+				result.WriteRune('-')
+			}
+		}
+		result.WriteRune(unicode.ToLower(r))
+	}
+
+	return result.String()
+}
+
+// lowerCamel converts PascalCase to camelCase (e.g., "BlogPost" -> "blogPost").
+// Used for operationIds in OpenAPI spec generation.
+func lowerCamel(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	runes := []rune(s)
+	return strings.ToLower(string(runes[0:1])) + string(runes[1:])
+}
+
+// humaValidationTag builds Huma validation tag string from field modifiers.
+// Maps MinLen -> minLength, MaxLen -> maxLength for Huma struct tags.
+func humaValidationTag(field parser.FieldIR) string {
+	var parts []string
+
+	if minLen := getModifierValue(field.Modifiers, "MinLen"); minLen != nil {
+		parts = append(parts, fmt.Sprintf(`minLength:"%v"`, minLen))
+	}
+	if maxLen := getModifierValue(field.Modifiers, "MaxLen"); maxLen != nil {
+		parts = append(parts, fmt.Sprintf(`maxLength:"%v"`, maxLen))
+	}
+	if min := getModifierValue(field.Modifiers, "Min"); min != nil {
+		parts = append(parts, fmt.Sprintf(`minimum:"%v"`, min))
+	}
+	if max := getModifierValue(field.Modifiers, "Max"); max != nil {
+		parts = append(parts, fmt.Sprintf(`maximum:"%v"`, max))
+	}
+	if field.Type == "Enum" && len(field.EnumValues) > 0 {
+		parts = append(parts, fmt.Sprintf(`enum:"%s"`, strings.Join(field.EnumValues, ",")))
+	}
+
+	if len(parts) == 0 {
+		return ""
+	}
+	return " " + strings.Join(parts, " ")
+}
+
+// sortableFieldNames returns comma-separated snake_case names of sortable fields.
+// Used for the enum tag on the sort query parameter.
+func sortableFieldNames(fields []parser.FieldIR) string {
+	var names []string
+	for _, f := range fields {
+		if isSortable(f.Modifiers) {
+			names = append(names, snake(f.Name))
+		}
+	}
+	return strings.Join(names, ",")
+}
+
+// filterableFields returns only fields with the Filterable modifier.
+func filterableFields(fields []parser.FieldIR) []parser.FieldIR {
+	var result []parser.FieldIR
+	for _, f := range fields {
+		if isFilterable(f.Modifiers) {
+			result = append(result, f)
+		}
+	}
+	return result
+}
+
+// buildLinkHeader builds an RFC 8288 Link header value for cursor pagination.
+// Returns the header string: <{basePath}?cursor={cursor}&limit={limit}>; rel="next"
+func buildLinkHeader(basePath string, cursor string, limit int) string {
+	return fmt.Sprintf(`<%s?cursor=%s&limit=%d>; rel="next"`, basePath, cursor, limit)
+}
+
+// not returns the boolean negation of its argument.
+func not(b bool) bool {
+	return !b
+}
+
+// join joins a string slice with a separator.
+func join(sep string, s []string) string {
+	return strings.Join(s, sep)
 }

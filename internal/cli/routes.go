@@ -48,28 +48,36 @@ func runRoutes(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Collect all routes grouped by resource
-	type resourceRoutes struct {
-		Name   string
-		Routes []Route
+	// Collect all routes grouped by resource (both API and HTML)
+	type resourceRouteGroup struct {
+		Name      string
+		APIRoutes []Route
+		HTMLRoutes []Route
 	}
 
-	var groups []resourceRoutes
+	var groups []resourceRouteGroup
 	totalRoutes := 0
 
 	for _, resource := range result.Resources {
-		routes := apiRoutes(resource)
-		groups = append(groups, resourceRoutes{
-			Name:   resource.Name,
-			Routes: routes,
+		api := apiRoutes(resource)
+		html := htmlRoutes(resource)
+		groups = append(groups, resourceRouteGroup{
+			Name:       resource.Name,
+			APIRoutes:  api,
+			HTMLRoutes: html,
 		})
-		totalRoutes += len(routes)
+		totalRoutes += len(api) + len(html)
 	}
 
-	// Compute max path length for column alignment
+	// Compute max path length across all routes for column alignment
 	maxPathLen := 0
 	for _, g := range groups {
-		for _, r := range g.Routes {
+		for _, r := range g.APIRoutes {
+			if len(r.Path) > maxPathLen {
+				maxPathLen = len(r.Path)
+			}
+		}
+		for _, r := range g.HTMLRoutes {
 			if len(r.Path) > maxPathLen {
 				maxPathLen = len(r.Path)
 			}
@@ -78,50 +86,62 @@ func runRoutes(cmd *cobra.Command, args []string) error {
 
 	// Define lipgloss styles
 	headerStyle := lipgloss.NewStyle().Bold(true)
+	sectionStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("7")) // dim white
 	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	getStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("10"))    // green
-	postStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("12"))   // blue
-	putStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("11"))    // yellow
-	deleteStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("9"))  // red
+	getStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("10"))   // green
+	postStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("12"))  // blue
+	putStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("11"))   // yellow
+	deleteStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("9")) // red
+
+	// printRoute prints a single route row with color-coded method and aligned path.
+	printRoute := func(route Route) {
+		methodStr := fmt.Sprintf("%-6s", route.Method)
+		var coloredMethod string
+		switch route.Method {
+		case "GET":
+			coloredMethod = getStyle.Render(methodStr)
+		case "POST":
+			coloredMethod = postStyle.Render(methodStr)
+		case "PUT":
+			coloredMethod = putStyle.Render(methodStr)
+		case "DELETE":
+			coloredMethod = deleteStyle.Render(methodStr)
+		default:
+			coloredMethod = methodStr
+		}
+
+		paddedPath := fmt.Sprintf("%-*s", maxPathLen+2, route.Path)
+		fmt.Printf("      %s %s%s\n",
+			coloredMethod,
+			paddedPath,
+			dimStyle.Render(route.OperationID),
+		)
+	}
 
 	fmt.Println()
 	fmt.Println(headerStyle.Render("Routes:"))
 	fmt.Println()
 
 	for _, g := range groups {
-		// Resource header: "Product (5 routes)"
-		count := len(g.Routes)
+		totalResourceRoutes := len(g.APIRoutes) + len(g.HTMLRoutes)
 		suffix := "routes"
-		if count == 1 {
+		if totalResourceRoutes == 1 {
 			suffix = "route"
 		}
-		fmt.Printf("  %s\n", headerStyle.Render(fmt.Sprintf("%s (%d %s)", g.Name, count, suffix)))
+		fmt.Printf("  %s\n", headerStyle.Render(fmt.Sprintf("%s (%d %s)", g.Name, totalResourceRoutes, suffix)))
+		fmt.Println()
 
-		for _, route := range g.Routes {
-			// Color-code the method
-			methodStr := fmt.Sprintf("%-6s", route.Method)
-			var coloredMethod string
-			switch route.Method {
-			case "GET":
-				coloredMethod = getStyle.Render(methodStr)
-			case "POST":
-				coloredMethod = postStyle.Render(methodStr)
-			case "PUT":
-				coloredMethod = putStyle.Render(methodStr)
-			case "DELETE":
-				coloredMethod = deleteStyle.Render(methodStr)
-			default:
-				coloredMethod = methodStr
-			}
+		// API Routes section
+		fmt.Printf("    %s\n", sectionStyle.Render("API"))
+		for _, route := range g.APIRoutes {
+			printRoute(route)
+		}
+		fmt.Println()
 
-			// Pad path for column alignment
-			paddedPath := fmt.Sprintf("%-*s", maxPathLen+2, route.Path)
-
-			fmt.Printf("    %s %s%s\n",
-				coloredMethod,
-				paddedPath,
-				dimStyle.Render(route.OperationID),
-			)
+		// HTML Routes section
+		fmt.Printf("    %s\n", sectionStyle.Render("HTML"))
+		for _, route := range g.HTMLRoutes {
+			printRoute(route)
 		}
 		fmt.Println()
 	}
@@ -174,6 +194,53 @@ func apiRoutes(resource parser.ResourceIR) []Route {
 			Method:      "DELETE",
 			Path:        fmt.Sprintf("/api/v1/%s/{id}", kebabPlural),
 			OperationID: fmt.Sprintf("delete%s", name),
+		},
+	}
+}
+
+// htmlRoutes returns the 7 HTML CRUD routes for a resource.
+// HTML routes use root path patterns (no /api/v1/ prefix) and are served via
+// Datastar SSE for create/update/delete mutations.
+func htmlRoutes(resource parser.ResourceIR) []Route {
+	name := resource.Name
+	pluralName := routePlural(name)
+	kebabPlural := routeKebab(pluralName)
+
+	return []Route{
+		{
+			Method:      "GET",
+			Path:        fmt.Sprintf("/%s", kebabPlural),
+			OperationID: fmt.Sprintf("html.list%s", pluralName),
+		},
+		{
+			Method:      "GET",
+			Path:        fmt.Sprintf("/%s/new", kebabPlural),
+			OperationID: fmt.Sprintf("html.new%s", name),
+		},
+		{
+			Method:      "GET",
+			Path:        fmt.Sprintf("/%s/{id}", kebabPlural),
+			OperationID: fmt.Sprintf("html.get%s", name),
+		},
+		{
+			Method:      "GET",
+			Path:        fmt.Sprintf("/%s/{id}/edit", kebabPlural),
+			OperationID: fmt.Sprintf("html.edit%s", name),
+		},
+		{
+			Method:      "POST",
+			Path:        fmt.Sprintf("/%s", kebabPlural),
+			OperationID: fmt.Sprintf("html.create%s", name),
+		},
+		{
+			Method:      "PUT",
+			Path:        fmt.Sprintf("/%s/{id}", kebabPlural),
+			OperationID: fmt.Sprintf("html.update%s", name),
+		},
+		{
+			Method:      "DELETE",
+			Path:        fmt.Sprintf("/%s/{id}", kebabPlural),
+			OperationID: fmt.Sprintf("html.delete%s", name),
 		},
 	}
 }

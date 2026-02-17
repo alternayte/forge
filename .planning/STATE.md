@@ -38,6 +38,7 @@ Progress: [██████░░░░] 48%
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 06 | 07 | 4m | 2 | 5 |
+| 06 | 04 | 2m | 2 | 3 |
 | 06 | 02 | 2m | 2 | 5 |
 | 06 | 01 | 2m | 2 | 6 |
 | 05 | 04 | 4m | 2 | 3 |
@@ -139,6 +140,7 @@ Recent decisions affecting current work:
 - [Phase 06]: Use pgtestdb.Custom over pgtestdb.New for NewTestPool to avoid open sql.DB connection interfering with pgxpool
 - [Phase 06]: Custom atlasMigrator uses Atlas CLI shell-out (not Go library) — consistent with project's existing approach in migrate package
 - [Phase 06]: runtime.Caller(0) in DefaultTestDBConfig resolves repo root from internal/forgetest/db.go source file path
+- [Phase 06]: scaffold_handlers template uses .Resource.Name for per-resource data access; html_register_all iterates .Resources — distinguishes scaffold-once vs generated-always templates
 
 ### Pending Todos
 
@@ -151,5 +153,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-07-PLAN.md (forgetest package with NewTestDB, NewTestPool, NewApp, PostDatastar)
-Resume file: .planning/phases/06-hypermedia-ui-generation/06-08-PLAN.md
+Stopped at: Completed 06-04-PLAN.md (HTML handler scaffold templates and HTML route registration template)
+Resume file: .planning/phases/06-hypermedia-ui-generation/06-05-PLAN.md

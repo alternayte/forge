@@ -1,0 +1,60 @@
+package {{lower .Resource.Name}}
+
+import (
+	"context"
+
+	"{{.ProjectModule}}/gen/models"
+)
+
+// Lifecycle hooks for {{.Resource.Name}} operations.
+//
+// These hooks are called by the action layer at key points in the resource
+// lifecycle. Override any hook to add custom business logic — for example,
+// sending notifications, updating caches, writing audit logs, or triggering
+// side effects.
+//
+// Default implementations are no-ops (return nil).
+// All hooks receive a context and the relevant model. Returning a non-nil
+// error aborts the operation and surfaces the error to the caller.
+
+// BeforeCreate is called before a new {{.Resource.Name}} is created.
+// Use this hook to mutate or validate the create input beyond generated rules.
+func BeforeCreate(ctx context.Context, input *models.{{.Resource.Name}}Create) error {
+	// TODO: Add pre-create logic here (e.g., set derived fields, extra validation).
+	return nil
+}
+
+// AfterCreate is called after a {{.Resource.Name}} has been created successfully.
+// Use this hook for post-create side effects (e.g., send welcome email, create related records).
+func AfterCreate(ctx context.Context, item *models.{{.Resource.Name}}) error {
+	// TODO: Add post-create logic here.
+	return nil
+}
+
+// BeforeUpdate is called before an existing {{.Resource.Name}} is updated.
+// Use this hook to mutate or validate the update input before it is applied.
+func BeforeUpdate(ctx context.Context, id interface{}, input *models.{{.Resource.Name}}Update) error {
+	// TODO: Add pre-update logic here (e.g., strip read-only fields, extra validation).
+	return nil
+}
+
+// AfterUpdate is called after a {{.Resource.Name}} has been updated successfully.
+// Use this hook for post-update side effects (e.g., invalidate cache, emit events).
+func AfterUpdate(ctx context.Context, item *models.{{.Resource.Name}}) error {
+	// TODO: Add post-update logic here.
+	return nil
+}
+
+// BeforeDelete is called before a {{.Resource.Name}} is deleted.
+// Return an error to prevent deletion (e.g., resource has dependents that must be removed first).
+func BeforeDelete(ctx context.Context, id interface{}) error {
+	// TODO: Add pre-delete logic here (e.g., check dependents, audit log).
+	return nil
+}
+
+// AfterDelete is called after a {{.Resource.Name}} has been deleted successfully.
+// Use this hook for post-delete side effects (e.g., cleanup related files, emit deletion event).
+func AfterDelete(ctx context.Context, id interface{}) error {
+	// TODO: Add post-delete logic here.
+	return nil
+}

@@ -1,0 +1,215 @@
+package {{lower .Resource.Name}}
+
+import (
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+	datastar "github.com/starfederation/datastar-go/datastar"
+	"{{.ProjectModule}}/gen/actions"
+	"{{.ProjectModule}}/gen/models"
+	ssehelpers "{{.ProjectModule}}/gen/html/sse"
+	"{{.ProjectModule}}/resources/{{snake .Resource.Name}}/views"
+)
+
+// Register{{.Resource.Name}}HTMLRoutes registers all HTML CRUD routes for {{.Resource.Name}}
+// on the given chi router. All business logic is delegated to the provided
+// {{.Resource.Name}}Actions implementation.
+//
+// Routes registered:
+//   GET  /{{kebab (plural .Resource.Name)}}          - List page
+//   GET  /{{kebab (plural .Resource.Name)}}/new       - New resource form
+//   GET  /{{kebab (plural .Resource.Name)}}/{id}      - Detail page
+//   GET  /{{kebab (plural .Resource.Name)}}/{id}/edit - Edit form
+//   POST /{{kebab (plural .Resource.Name)}}           - Create (Datastar SSE)
+//   PUT  /{{kebab (plural .Resource.Name)}}/{id}      - Update (Datastar SSE)
+//   DELETE /{{kebab (plural .Resource.Name)}}/{id}    - Delete (Datastar SSE)
+func Register{{.Resource.Name}}HTMLRoutes(router chi.Router, acts actions.{{.Resource.Name}}Actions) {
+	router.Route("/{{kebab (plural .Resource.Name)}}", func(r chi.Router) {
+		r.Get("/", HandleList(acts))
+		r.Get("/new", HandleNew())
+		r.Get("/{id}", HandleDetail(acts))
+		r.Get("/{id}/edit", HandleEdit(acts))
+		r.Post("/", HandleCreate(acts))
+		r.Put("/{id}", HandleUpdate(acts))
+		r.Delete("/{id}", HandleDelete(acts))
+	})
+}
+
+// HandleList returns an http.HandlerFunc that renders the {{.Resource.Name}} list page.
+// Supports sort, filter, and pagination via query parameters.
+func HandleList(acts actions.{{.Resource.Name}}Actions) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		// Parse pagination params
+		page := 1
+		pageSize := 20
+
+		// Build empty filter and sort (query param parsing can be customized in hooks)
+		filter := models.{{.Resource.Name}}Filter{}
+		sort := models.{{.Resource.Name}}Sort{}
+
+		items, _, err := acts.List(ctx, filter, sort, page, pageSize)
+		if err != nil {
+			http.Error(w, "Failed to list {{lower .Resource.Name}}s", http.StatusInternalServerError)
+			return
+		}
+
+		views.{{.Resource.Name}}List(items).Render(ctx, w)
+	}
+}
+
+// HandleNew returns an http.HandlerFunc that renders an empty {{.Resource.Name}} form.
+func HandleNew() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		views.{{.Resource.Name}}Form(nil, nil, "").Render(ctx, w)
+	}
+}
+
+// HandleDetail returns an http.HandlerFunc that renders the {{.Resource.Name}} detail page.
+func HandleDetail(acts actions.{{.Resource.Name}}Actions) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		id, err := parseUUID(chi.URLParam(r, "id"))
+		if err != nil {
+			http.Error(w, "Invalid ID", http.StatusBadRequest)
+			return
+		}
+
+		item, err := acts.Get(ctx, id)
+		if err != nil {
+			http.Error(w, "{{.Resource.Name}} not found", http.StatusNotFound)
+			return
+		}
+
+		views.{{.Resource.Name}}Detail(*item).Render(ctx, w)
+	}
+}
+
+// HandleEdit returns an http.HandlerFunc that renders the {{.Resource.Name}} edit form
+// pre-populated with the existing resource data.
+func HandleEdit(acts actions.{{.Resource.Name}}Actions) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		id, err := parseUUID(chi.URLParam(r, "id"))
+		if err != nil {
+			http.Error(w, "Invalid ID", http.StatusBadRequest)
+			return
+		}
+
+		item, err := acts.Get(ctx, id)
+		if err != nil {
+			http.Error(w, "{{.Resource.Name}} not found", http.StatusNotFound)
+			return
+		}
+
+		views.{{.Resource.Name}}Form(item, nil, "").Render(ctx, w)
+	}
+}
+
+// HandleCreate returns an http.HandlerFunc that reads Datastar signals, creates a
+// {{.Resource.Name}}, and responds via SSE — either re-rendering the form with validation
+// errors, or redirecting to the detail page on success.
+func HandleCreate(acts actions.{{.Resource.Name}}Actions) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		var signals models.{{.Resource.Name}}Create
+		if err := datastar.ReadSignals(r, &signals); err != nil {
+			http.Error(w, "Failed to read signals", http.StatusBadRequest)
+			return
+		}
+
+		sse := datastar.NewSSE(w, r)
+
+		item, err := acts.Create(ctx, signals)
+		if err != nil {
+			fieldErrors := toFieldErrors(err)
+			ssehelpers.MergeFragment(sse, views.{{.Resource.Name}}Form(nil, fieldErrors, err.Error()))
+			return
+		}
+
+		ssehelpers.Redirect(sse, "/{{kebab (plural .Resource.Name)}}/"+item.ID.String())
+	}
+}
+
+// HandleUpdate returns an http.HandlerFunc that reads Datastar signals, updates a
+// {{.Resource.Name}}, and responds via SSE — either re-rendering the form with validation
+// errors, or redirecting to the detail page on success.
+func HandleUpdate(acts actions.{{.Resource.Name}}Actions) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		id, err := parseUUID(chi.URLParam(r, "id"))
+		if err != nil {
+			http.Error(w, "Invalid ID", http.StatusBadRequest)
+			return
+		}
+
+		var signals models.{{.Resource.Name}}Update
+		if err := datastar.ReadSignals(r, &signals); err != nil {
+			http.Error(w, "Failed to read signals", http.StatusBadRequest)
+			return
+		}
+
+		sse := datastar.NewSSE(w, r)
+
+		item, err := acts.Update(ctx, id, signals)
+		if err != nil {
+			// Fetch existing item to re-populate form on error
+			existing, _ := acts.Get(ctx, id)
+			fieldErrors := toFieldErrors(err)
+			ssehelpers.MergeFragment(sse, views.{{.Resource.Name}}Form(existing, fieldErrors, err.Error()))
+			return
+		}
+
+		ssehelpers.Redirect(sse, "/{{kebab (plural .Resource.Name)}}/"+item.ID.String())
+	}
+}
+
+// HandleDelete returns an http.HandlerFunc that deletes a {{.Resource.Name}} and
+// redirects to the list page via Datastar SSE.
+func HandleDelete(acts actions.{{.Resource.Name}}Actions) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		id, err := parseUUID(chi.URLParam(r, "id"))
+		if err != nil {
+			http.Error(w, "Invalid ID", http.StatusBadRequest)
+			return
+		}
+
+		sse := datastar.NewSSE(w, r)
+
+		if err := acts.Delete(ctx, id); err != nil {
+			ssehelpers.MergeFragment(sse, views.{{.Resource.Name}}Error(err.Error()))
+			return
+		}
+
+		ssehelpers.Redirect(sse, "/{{kebab (plural .Resource.Name)}}")
+	}
+}
+
+// toFieldErrors extracts field-level validation errors from an error, returning
+// a map[string]string suitable for template rendering.
+// Non-validation errors return an empty map.
+func toFieldErrors(err error) map[string]string {
+	type fieldErrorer interface {
+		FieldErrors() map[string]string
+	}
+
+	if fe, ok := err.(fieldErrorer); ok {
+		return fe.FieldErrors()
+	}
+
+	return map[string]string{}
+}
+
+// parseUUID parses a Chi URL parameter string into a uuid.UUID.
+func parseUUID(s string) (uuid.UUID, error) {
+	return uuid.Parse(s)
+}

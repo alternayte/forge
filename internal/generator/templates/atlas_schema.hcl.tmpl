@@ -62,3 +62,28 @@ table "{{plural (snake .Name)}}" {
   {{end}}
 }
 {{end}}
+
+# Sessions table required by alexedwards/scs pgxstore for PostgreSQL session storage.
+# This table is always generated — session management is a core framework feature
+# and does not depend on any user-defined resource.
+table "sessions" {
+  schema = schema.public
+  column "token" {
+    type = text
+    null = false
+  }
+  column "data" {
+    type = sql("bytea")
+    null = false
+  }
+  column "expiry" {
+    type = timestamptz
+    null = false
+  }
+  primary_key {
+    columns = [column.token]
+  }
+  index "sessions_expiry_idx" {
+    columns = [column.expiry]
+  }
+}

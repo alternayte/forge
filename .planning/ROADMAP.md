@@ -157,10 +157,14 @@ Plans:
   6. Atlas generates row-level security (RLS) policies for tenant-scoped resources
   7. When Auditable is enabled, created_by/updated_by columns are auto-populated and JSONB change diffs are recorded
   8. Relationship preloading (Eager) automatically excludes soft-deleted related records
-**Plans**: TBD
+**Plans:** 5 plans
 
 Plans:
-- TBD
+- [ ] 07-01-PLAN.md — Schema DSL, IR, and parser extensions (Visibility, Mutability, Permission, Eager)
+- [ ] 07-02-PLAN.md — Soft delete (query filtering, partial unique indexes, Restore method)
+- [ ] 07-03-PLAN.md — Tenant scoping (context propagation, query scoping, RLS, factories)
+- [ ] 07-04-PLAN.md — Permissions and field visibility (CRUD permission checks, role-based field stripping)
+- [ ] 07-05-PLAN.md — Audit logging and eager loading (JSONB diffs, audit_logs table, API endpoint)
 
 ### Phase 8: Background Jobs & Production Readiness
 **Goal**: Production binary is deployable with background jobs, observability, and full CLI tooling
@@ -194,5 +198,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 4. Action Layer & Error Handling | 0/3 | Planned | - |
 | 5. REST API Generation | 0/4 | Planned | - |
 | 6. Hypermedia UI Generation | 9/9 | Complete    | 2026-02-17 |
-| 7. Advanced Data Features | 0/TBD | Not started | - |
+| 7. Advanced Data Features | 0/5 | Planned | - |
 | 8. Background Jobs & Production Readiness | 0/TBD | Not started | - |

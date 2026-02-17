@@ -50,6 +50,7 @@ Progress: [██████░░░░] 48%
 | 04 | 01 | 2.1m | 2 | 4 |
 | 03 | 02 | 3.7m | 2 | 10 |
 | Phase 06 P05 | 2 | 2 tasks | 4 files |
+| Phase 06 P03 | 5 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -146,6 +147,9 @@ Recent decisions affecting current work:
 - [Phase 06]: RegisterOAuthRoutes places auth routes outside RequireSession middleware to prevent infinite redirect loops
 - [Phase 06]: UserFinder/PasswordAuthenticator as function types (not interfaces) so generated app passes closures without forge importing gen/
 - [Phase 06]: Sessions table is static block in Atlas HCL template (not conditional) — infrastructure required by pgxstore, not user-defined schema
+- [Phase 06]: Role guard uses role == '' || role == 'value' pattern — empty role ensures fields visible in admin/dev contexts
+- [Phase 06]: Mutability modifier generates editable-vs-readonly conditional rather than hiding — data visible to all, editable only by matching role
+- [Phase 06]: Filter section only rendered when filterableFields helper returns non-empty slice — avoids empty filter UI
 
 ### Pending Todos
 
@@ -158,5 +162,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-05-PLAN.md (OAuth2 providers via Goth and pgxstore sessions table in Atlas HCL schema)
-Resume file: .planning/phases/06-hypermedia-ui-generation/06-06-PLAN.md
+Stopped at: Completed 06-03-PLAN.md (scaffold form, list, detail templ templates with Datastar SSE and role-based guards)
+Resume file: .planning/phases/06-hypermedia-ui-generation/06-04-PLAN.md

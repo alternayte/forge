@@ -44,6 +44,8 @@ func BuildFuncMap() template.FuncMap {
 		"buildLinkHeader":     buildLinkHeader,
 		"not":                 not,
 		"join":                join,
+		// HTML generation helpers
+		"htmlInputType": htmlInputType,
 	}
 }
 
@@ -456,4 +458,33 @@ func not(b bool) bool {
 // join joins a string slice with a separator.
 func join(sep string, s []string) string {
 	return strings.Join(s, sep)
+}
+
+// htmlInputType maps IR field type strings to HTML input type attributes.
+// Used in HTML form generation to select the appropriate input element type.
+func htmlInputType(fieldType string) string {
+	switch fieldType {
+	case "String":
+		return "text"
+	case "Text":
+		return "text"
+	case "Int":
+		return "number"
+	case "BigInt":
+		return "number"
+	case "Decimal":
+		return "number"
+	case "Bool":
+		return "checkbox"
+	case "Email":
+		return "email"
+	case "URL":
+		return "url"
+	case "Date":
+		return "date"
+	case "DateTime":
+		return "datetime-local"
+	default:
+		return "text"
+	}
 }

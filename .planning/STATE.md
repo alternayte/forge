@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 6 of 8 (Hypermedia UI Generation)
-Plan: 7 of 9 in current phase
+Plan: 8 of 9 in current phase (05 completed out of order)
 Status: In Progress
-Last activity: 2026-02-17 — Completed 06-07-PLAN.md (forgetest package: NewTestDB, NewTestPool, NewApp, PostDatastar)
+Last activity: 2026-02-17 — Completed 06-05-PLAN.md (OAuth2 providers via Goth + pgxstore sessions table in Atlas HCL)
 
 Progress: [██████░░░░] 48%
 
@@ -49,6 +49,7 @@ Progress: [██████░░░░] 48%
 | 04 | 02 | 1.9m | 2 | 4 |
 | 04 | 01 | 2.1m | 2 | 4 |
 | 03 | 02 | 3.7m | 2 | 10 |
+| Phase 06 P05 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -141,6 +142,10 @@ Recent decisions affecting current work:
 - [Phase 06]: Custom atlasMigrator uses Atlas CLI shell-out (not Go library) — consistent with project's existing approach in migrate package
 - [Phase 06]: runtime.Caller(0) in DefaultTestDBConfig resolves repo root from internal/forgetest/db.go source file path
 - [Phase 06]: scaffold_handlers template uses .Resource.Name for per-resource data access; html_register_all iterates .Resources — distinguishes scaffold-once vs generated-always templates
+- [Phase 06]: OAuth temp state in gorilla sessions signed cookie (gothic.Store), completed auth sessions in PostgreSQL SCS+pgxstore (AUTH-03)
+- [Phase 06]: RegisterOAuthRoutes places auth routes outside RequireSession middleware to prevent infinite redirect loops
+- [Phase 06]: UserFinder/PasswordAuthenticator as function types (not interfaces) so generated app passes closures without forge importing gen/
+- [Phase 06]: Sessions table is static block in Atlas HCL template (not conditional) — infrastructure required by pgxstore, not user-defined schema
 
 ### Pending Todos
 
@@ -153,5 +158,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-04-PLAN.md (HTML handler scaffold templates and HTML route registration template)
-Resume file: .planning/phases/06-hypermedia-ui-generation/06-05-PLAN.md
+Stopped at: Completed 06-05-PLAN.md (OAuth2 providers via Goth and pgxstore sessions table in Atlas HCL schema)
+Resume file: .planning/phases/06-hypermedia-ui-generation/06-06-PLAN.md

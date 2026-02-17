@@ -1,0 +1,119 @@
+package views
+
+import (
+	"fmt"
+	"{{.ProjectModule}}/gen/models"
+)
+
+// {{.Resource.Name}}List renders a paginated, sortable, filterable table of {{plural .Resource.Name | lower}}.
+templ {{.Resource.Name}}List({{lower .Resource.Name | plural}} []models.{{.Resource.Name}}, currentSort string, currentDir string, page int, totalPages int) {
+	<div class="max-w-7xl mx-auto">
+		<div class="flex items-center justify-between mb-6">
+			<h2 class="text-xl font-semibold text-gray-900">{{plural .Resource.Name}}</h2>
+			<a
+				href="/{{kebab (plural .Resource.Name)}}/new"
+				class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+			>New {{.Resource.Name}}</a>
+		</div>
+{{- if filterableFields .Resource.Fields}}
+		<div
+			class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4"
+			data-signals="{
+{{- range filterableFields .Resource.Fields}}
+				filter_{{snake .Name}}: '',
+{{- end}}
+			}"
+		>
+			<div class="flex flex-wrap gap-4 items-end">
+{{- range filterableFields .Resource.Fields}}
+				<div class="flex flex-col gap-1">
+					<label class="text-xs font-medium text-gray-600">{{.Name}}</label>
+					<input
+						type="text"
+						name="filter_{{snake .Name}}"
+						placeholder="Filter by {{.Name}}"
+						data-bind="filter_{{snake .Name}}"
+						class="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+					/>
+				</div>
+{{- end}}
+				<button
+					data-on:click="@get('/{{kebab (plural .Resource.Name)}}')"
+					class="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800 text-sm"
+				>Filter</button>
+			</div>
+		</div>
+{{- end}}
+		<div class="bg-white shadow rounded-lg overflow-hidden">
+			<table class="w-full border-collapse">
+				<thead class="bg-gray-50 border-b border-gray-200">
+					<tr>
+{{- range .Resource.Fields}}
+{{- if isSortable .Modifiers}}
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<button
+								data-signals='{"sort": "{{snake .Name}}", "dir": "asc"}'
+								data-on:click="@get('/{{kebab (plural $.Resource.Name)}}')"
+								class="flex items-center gap-1 hover:text-gray-700"
+							>
+								{{.Name}}
+								if currentSort == "{{snake .Name}}" {
+									if currentDir == "asc" {
+										<span aria-hidden="true">↑</span>
+									} else {
+										<span aria-hidden="true">↓</span>
+									}
+								}
+							</button>
+						</th>
+{{- else}}
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{.Name}}</th>
+{{- end}}
+{{- end}}
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-gray-200">
+					for _, item := range {{lower .Resource.Name | plural}} {
+						<tr class="hover:bg-gray-50">
+{{- range .Resource.Fields}}
+							<td class="px-4 py-3 text-sm text-gray-900">{ fmt.Sprint(item.{{.Name}}) }</td>
+{{- end}}
+							<td class="px-4 py-3 text-sm">
+								<div class="flex gap-3">
+									<a
+										href={ templ.SafeURL(fmt.Sprintf("/{{kebab (plural $.Resource.Name)}}/%s", fmt.Sprint(item.ID))) }
+										class="text-blue-600 hover:text-blue-800"
+									>View</a>
+									<a
+										href={ templ.SafeURL(fmt.Sprintf("/{{kebab (plural $.Resource.Name)}}/%s/edit", fmt.Sprint(item.ID))) }
+										class="text-gray-600 hover:text-gray-800"
+									>Edit</a>
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+		if totalPages > 1 {
+			<div class="flex items-center justify-between mt-4">
+				<div class="text-sm text-gray-600">Page { fmt.Sprint(page) } of { fmt.Sprint(totalPages) }</div>
+				<div class="flex gap-2">
+					if page > 1 {
+						<a
+							href={ templ.SafeURL(fmt.Sprintf("/{{kebab (plural $.Resource.Name)}}?page=%d", page-1)) }
+							class="px-3 py-1 rounded border border-gray-300 text-sm hover:bg-gray-50"
+						>Previous</a>
+					}
+					if page < totalPages {
+						<a
+							href={ templ.SafeURL(fmt.Sprintf("/{{kebab (plural $.Resource.Name)}}?page=%d", page+1)) }
+							class="px-3 py-1 rounded border border-gray-300 text-sm hover:bg-gray-50"
+						>Next</a>
+					}
+				</div>
+			</div>
+		}
+	</div>
+}

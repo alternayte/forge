@@ -73,6 +73,11 @@ func Generate(resources []parser.ResourceIR, cfg GenerateConfig) error {
 		return err
 	}
 
+	// Generate API input/output structs and route registration
+	if err := GenerateAPI(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
 	return nil
 }
 

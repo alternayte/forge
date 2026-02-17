@@ -73,5 +73,24 @@ func GenerateAPI(resources []parser.ResourceIR, outputDir string, projectModule 
 		}
 	}
 
+	// Generate shared register_all.go (RegisterAllRoutes dispatcher over all resources)
+	registerAllData := struct {
+		ProjectModule string
+		Resources     []parser.ResourceIR
+	}{
+		ProjectModule: projectModule,
+		Resources:     resources,
+	}
+
+	registerAllRaw, err := renderTemplate("templates/api_register_all.go.tmpl", registerAllData)
+	if err != nil {
+		return err
+	}
+
+	registerAllPath := filepath.Join(apiDir, "register_all.go")
+	if err := writeGoFile(registerAllPath, registerAllRaw); err != nil {
+		return err
+	}
+
 	return nil
 }

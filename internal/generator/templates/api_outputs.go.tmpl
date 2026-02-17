@@ -8,6 +8,8 @@ import (
 
 // List{{.Name}}Output is the response envelope for listing {{plural .Name | lower}}.
 type List{{.Name}}Output struct {
+	// Link is the RFC 8288 pagination link header (e.g., <url>; rel="next").
+	Link string `header:"Link"`
 	Body struct {
 		// Data contains the list of {{plural .Name | lower}}.
 		Data []models.{{.Name}} `json:"data" doc:"List of {{plural .Name | lower}}"`

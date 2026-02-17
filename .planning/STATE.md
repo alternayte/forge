@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 6 of 8 (Hypermedia UI Generation)
-Plan: 2 of 9 in current phase
+Plan: 7 of 9 in current phase
 Status: In Progress
-Last activity: 2026-02-17 — Completed 06-01-PLAN.md (templ primitives library and SSE helpers)
+Last activity: 2026-02-17 — Completed 06-07-PLAN.md (forgetest package: NewTestDB, NewTestPool, NewApp, PostDatastar)
 
 Progress: [██████░░░░] 48%
 
@@ -37,6 +37,9 @@ Progress: [██████░░░░] 48%
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
+| 06 | 07 | 4m | 2 | 5 |
+| 06 | 02 | 2m | 2 | 5 |
+| 06 | 01 | 2m | 2 | 6 |
 | 05 | 04 | 4m | 2 | 3 |
 | 05 | 03 | 5m | 2 | 6 |
 | 05 | 01 | 5m | 2 | 8 |
@@ -45,8 +48,6 @@ Progress: [██████░░░░] 48%
 | 04 | 02 | 1.9m | 2 | 4 |
 | 04 | 01 | 2.1m | 2 | 4 |
 | 03 | 02 | 3.7m | 2 | 10 |
-| Phase 06 P01 | 2 | 2 tasks | 6 files |
-| Phase 06 P02 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,9 @@ Recent decisions affecting current work:
 - [Phase 06]: Use datastar.TemplComponent interface in sse.go (not templ.Component) — avoids templ dependency in generated SSE package while remaining compatible
 - [Phase 06]: primitives.templ uses writeRawFile (not writeGoFile) — .templ files need templ compiler, not gofmt
 - [Phase 06]: SSE type is datastar.ServerSentEventGenerator (no datastar.SSE alias exists in v1.1.0)
+- [Phase 06]: Use pgtestdb.Custom over pgtestdb.New for NewTestPool to avoid open sql.DB connection interfering with pgxpool
+- [Phase 06]: Custom atlasMigrator uses Atlas CLI shell-out (not Go library) — consistent with project's existing approach in migrate package
+- [Phase 06]: runtime.Caller(0) in DefaultTestDBConfig resolves repo root from internal/forgetest/db.go source file path
 
 ### Pending Todos
 
@@ -147,5 +151,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-01-PLAN.md (templ primitives library and Datastar SSE helpers)
-Resume file: .planning/phases/06-hypermedia-ui-generation/06-02-PLAN.md
+Stopped at: Completed 06-07-PLAN.md (forgetest package with NewTestDB, NewTestPool, NewApp, PostDatastar)
+Resume file: .planning/phases/06-hypermedia-ui-generation/06-08-PLAN.md

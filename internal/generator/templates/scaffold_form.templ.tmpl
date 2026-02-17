@@ -1,0 +1,240 @@
+package views
+
+import (
+	"fmt"
+	"{{.ProjectModule}}/gen/models"
+	"{{.ProjectModule}}/gen/html/primitives"
+)
+
+// {{.Resource.Name}}Form renders a Datastar-native form for creating or editing a {{.Resource.Name}}.
+// The role parameter controls field-level visibility and mutability based on schema modifiers.
+templ {{.Resource.Name}}Form({{lower .Resource.Name}} *models.{{.Resource.Name}}, errors map[string]string, role string) {
+	<div id="{{lower .Resource.Name}}-form">
+		<form
+			data-on:submit__prevent="@post('/{{kebab (plural .Resource.Name)}}')"
+			data-signals="{
+{{- range .Resource.Fields}}
+{{- if not (isIDField .)}}
+				{{snake .Name}}: '',
+{{- end}}
+{{- end}}
+			}"
+		>
+			<div class="flex flex-col gap-4">
+{{- range .Resource.Fields}}
+{{- if not (isIDField .)}}
+{{- if hasModifier .Modifiers "Visibility"}}
+				if role == "" || role == "{{getModifierValue .Modifiers "Visibility"}}" {
+{{- if hasModifier .Modifiers "Mutability"}}
+					if role == "" || role == "{{getModifierValue .Modifiers "Mutability"}}" {
+						@primitives.FormField("{{.Name}}", "{{snake .Name}}", errors["{{snake .Name}}"]) {
+{{- if eq .Type "Enum"}}
+							@primitives.SelectInput("{{snake .Name}}", {{lower $.Resource.Name}}.{{.Name}}, []primitives.SelectOption{
+{{- range .EnumValues}}
+								{Value: "{{.}}", Label: "{{.}}"},
+{{- end}}
+							})
+{{- else if eq .Type "Decimal"}}
+							@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}), "")
+{{- else if eq .Type "Bool"}}
+							<input
+								id="{{snake .Name}}"
+								type="checkbox"
+								name="{{snake .Name}}"
+								data-bind="{{snake .Name}}"
+								class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+							/>
+{{- else if eq .Type "Date"}}
+							<input
+								id="{{snake .Name}}"
+								type="date"
+								name="{{snake .Name}}"
+								data-bind="{{snake .Name}}"
+								class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+							/>
+{{- else if eq .Type "DateTime"}}
+							<input
+								id="{{snake .Name}}"
+								type="datetime-local"
+								name="{{snake .Name}}"
+								data-bind="{{snake .Name}}"
+								class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+							/>
+{{- else if or (eq .Type "Int") (eq .Type "BigInt")}}
+							<input
+								id="{{snake .Name}}"
+								type="number"
+								name="{{snake .Name}}"
+								data-bind="{{snake .Name}}"
+								class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+							/>
+{{- else}}
+							@primitives.TextInput("{{snake .Name}}", "", "")
+{{- end}}
+						}
+					} else {
+						<div class="flex flex-col gap-1">
+							<span class="text-sm font-medium text-gray-700">{{.Name}}</span>
+							<span class="text-sm text-gray-600">{ fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}) }</span>
+						</div>
+					}
+{{- else}}
+					@primitives.FormField("{{.Name}}", "{{snake .Name}}", errors["{{snake .Name}}"]) {
+{{- if eq .Type "Enum"}}
+						@primitives.SelectInput("{{snake .Name}}", {{lower $.Resource.Name}}.{{.Name}}, []primitives.SelectOption{
+{{- range .EnumValues}}
+							{Value: "{{.}}", Label: "{{.}}"},
+{{- end}}
+						})
+{{- else if eq .Type "Decimal"}}
+						@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}), "")
+{{- else if eq .Type "Bool"}}
+						<input
+							id="{{snake .Name}}"
+							type="checkbox"
+							name="{{snake .Name}}"
+							data-bind="{{snake .Name}}"
+							class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+						/>
+{{- else if eq .Type "Date"}}
+						<input
+							id="{{snake .Name}}"
+							type="date"
+							name="{{snake .Name}}"
+							data-bind="{{snake .Name}}"
+							class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+						/>
+{{- else if eq .Type "DateTime"}}
+						<input
+							id="{{snake .Name}}"
+							type="datetime-local"
+							name="{{snake .Name}}"
+							data-bind="{{snake .Name}}"
+							class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+						/>
+{{- else if or (eq .Type "Int") (eq .Type "BigInt")}}
+						<input
+							id="{{snake .Name}}"
+							type="number"
+							name="{{snake .Name}}"
+							data-bind="{{snake .Name}}"
+							class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+						/>
+{{- else}}
+						@primitives.TextInput("{{snake .Name}}", "", "")
+{{- end}}
+					}
+{{- end}}
+				}
+{{- else if hasModifier .Modifiers "Mutability"}}
+				if role == "" || role == "{{getModifierValue .Modifiers "Mutability"}}" {
+					@primitives.FormField("{{.Name}}", "{{snake .Name}}", errors["{{snake .Name}}"]) {
+{{- if eq .Type "Enum"}}
+						@primitives.SelectInput("{{snake .Name}}", {{lower $.Resource.Name}}.{{.Name}}, []primitives.SelectOption{
+{{- range .EnumValues}}
+							{Value: "{{.}}", Label: "{{.}}"},
+{{- end}}
+						})
+{{- else if eq .Type "Decimal"}}
+						@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}), "")
+{{- else if eq .Type "Bool"}}
+						<input
+							id="{{snake .Name}}"
+							type="checkbox"
+							name="{{snake .Name}}"
+							data-bind="{{snake .Name}}"
+							class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+						/>
+{{- else if eq .Type "Date"}}
+						<input
+							id="{{snake .Name}}"
+							type="date"
+							name="{{snake .Name}}"
+							data-bind="{{snake .Name}}"
+							class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+						/>
+{{- else if eq .Type "DateTime"}}
+						<input
+							id="{{snake .Name}}"
+							type="datetime-local"
+							name="{{snake .Name}}"
+							data-bind="{{snake .Name}}"
+							class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+						/>
+{{- else if or (eq .Type "Int") (eq .Type "BigInt")}}
+						<input
+							id="{{snake .Name}}"
+							type="number"
+							name="{{snake .Name}}"
+							data-bind="{{snake .Name}}"
+							class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+						/>
+{{- else}}
+						@primitives.TextInput("{{snake .Name}}", "", "")
+{{- end}}
+					}
+				} else {
+					<div class="flex flex-col gap-1">
+						<span class="text-sm font-medium text-gray-700">{{.Name}}</span>
+						<span class="text-sm text-gray-600">{ fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}) }</span>
+					</div>
+				}
+{{- else}}
+				@primitives.FormField("{{.Name}}", "{{snake .Name}}", errors["{{snake .Name}}"]) {
+{{- if eq .Type "Enum"}}
+					@primitives.SelectInput("{{snake .Name}}", {{lower $.Resource.Name}}.{{.Name}}, []primitives.SelectOption{
+{{- range .EnumValues}}
+						{Value: "{{.}}", Label: "{{.}}"},
+{{- end}}
+					})
+{{- else if eq .Type "Decimal"}}
+					@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}), "")
+{{- else if eq .Type "Bool"}}
+					<input
+						id="{{snake .Name}}"
+						type="checkbox"
+						name="{{snake .Name}}"
+						data-bind="{{snake .Name}}"
+						class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+					/>
+{{- else if eq .Type "Date"}}
+					<input
+						id="{{snake .Name}}"
+						type="date"
+						name="{{snake .Name}}"
+						data-bind="{{snake .Name}}"
+						class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+					/>
+{{- else if eq .Type "DateTime"}}
+					<input
+						id="{{snake .Name}}"
+						type="datetime-local"
+						name="{{snake .Name}}"
+						data-bind="{{snake .Name}}"
+						class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+					/>
+{{- else if or (eq .Type "Int") (eq .Type "BigInt")}}
+					<input
+						id="{{snake .Name}}"
+						type="number"
+						name="{{snake .Name}}"
+						data-bind="{{snake .Name}}"
+						class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+					/>
+{{- else}}
+					@primitives.TextInput("{{snake .Name}}", "", "")
+{{- end}}
+				}
+{{- end}}
+{{- end}}
+{{- end}}
+			</div>
+			<div class="mt-6">
+				<button
+					type="submit"
+					class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+				>Save</button>
+			</div>
+		</form>
+	</div>
+}

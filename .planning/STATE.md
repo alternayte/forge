@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 
 ## Current Position
 
-Phase: 5 of 8 (REST API Generation)
-Plan: 4 of 4 in current phase
+Phase: 6 of 8 (Hypermedia UI Generation)
+Plan: 2 of 9 in current phase
 Status: In Progress
-Last activity: 2026-02-17 — Completed 05-04-PLAN.md
+Last activity: 2026-02-17 — Completed 06-01-PLAN.md (templ primitives library and SSE helpers)
 
 Progress: [██████░░░░] 48%
 
@@ -45,6 +45,8 @@ Progress: [██████░░░░] 48%
 | 04 | 02 | 1.9m | 2 | 4 |
 | 04 | 01 | 2.1m | 2 | 4 |
 | 03 | 02 | 3.7m | 2 | 10 |
+| Phase 06 P01 | 2 | 2 tasks | 6 files |
+| Phase 06 P02 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -126,6 +128,13 @@ Recent decisions affecting current work:
 - [Phase 05-04]: Build huma.OpenAPI struct directly from IR (no HTTP adapter) for spec export — avoids adding chi or net/http dependencies to CLI
 - [Phase 05-04]: apiRoutes() separated from runRoutes() so Phase 6 can add htmlRoutes() to same forge routes output without refactoring
 - [Phase 05-04]: routeKebab/routePlural/routeLowerCamel duplicated in cli package (not imported from generator) to keep packages independent
+- [Phase 06]: SCS session manager uses pgxstore for PostgreSQL-backed sessions (no Redis) — AUTH-03 compliance
+- [Phase 06]: RequireSession redirects to /auth/login with 302 (HTML UX) vs API auth returning 401 JSON — intentional divergence
+- [Phase 06]: LoginUser calls sm.RenewToken before storing credentials to prevent session fixation attacks
+- [Phase 06]: BcryptCost=12 (not default 10) and 72-byte length guard in HashPassword for 2026 hardware and bcrypt truncation safety
+- [Phase 06]: Use datastar.TemplComponent interface in sse.go (not templ.Component) — avoids templ dependency in generated SSE package while remaining compatible
+- [Phase 06]: primitives.templ uses writeRawFile (not writeGoFile) — .templ files need templ compiler, not gofmt
+- [Phase 06]: SSE type is datastar.ServerSentEventGenerator (no datastar.SSE alias exists in v1.1.0)
 
 ### Pending Todos
 
@@ -138,5 +147,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 05-04-PLAN.md (CLI routes and OpenAPI export commands)
-Resume file: .planning/phases/06-html-generation/06-01-PLAN.md
+Stopped at: Completed 06-01-PLAN.md (templ primitives library and Datastar SSE helpers)
+Resume file: .planning/phases/06-hypermedia-ui-generation/06-02-PLAN.md

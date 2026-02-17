@@ -31,14 +31,14 @@ Progress: [█████░░░░░] 40%
 | 02 | 5 | 18.0m | 3.6m |
 | 03 | 3 | 10.2m | 3.4m |
 | 04 | 3 | 6.1m | 2.0m |
-| 05 | 2 (so far) | ~6m | ~3m |
+| 05 | 3 (so far) | ~11m | ~3.7m |
 
 **Recent Executions:**
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
+| 05 | 01 | 5m | 2 | 8 |
 | 05 | 02 | 3m | 2 | 6 |
-| 05 | 01 | ~3m | 2 | 5 |
 | 04 | 03 | 2.1m | 2 | 5 |
 | 04 | 02 | 1.9m | 2 | 4 |
 | 04 | 01 | 2.1m | 2 | 4 |
@@ -110,6 +110,10 @@ Recent decisions affecting current work:
 - [Phase 04-03]: JSON errors follow RFC 9457 shape using simple fmt.Fprintf (no json.Marshal dependency)
 - [Phase 04-03]: HTML errors use inline template string (templ templates come in Phase 6)
 - [Phase 04-03]: Import stdlib errors as stderrors to avoid conflict with gen/errors package
+- [Phase 05-01]: List output structs use header:"Link" tag field (not huma.SetHeader) for RFC 8288 Link header — canonical Huma v2 pattern
+- [Phase 05-01]: buildAPILinkHeader function generated in types.go (not as a funcmap helper) — link header logic lives inside generated code
+- [Phase 05-01]: humaValidationTag builds from MinLen, MaxLen, Min, Max, and Enum modifiers in one function
+- [Phase 05-01]: funcmap not/join helpers added as template primitives for boolean negation and string joining
 - [Phase 05-02]: huma.API passed to AuthMiddleware constructor so WriteErr can produce structured 401 responses
 - [Phase 05-02]: validateBearerToken/validateAPIKey return updated huma.Context (not mutate) to thread context through middleware chain
 - [Phase 05-02]: Phase 5 rate limiting uses Default tier for all requests — tiered enforcement deferred to Plan 03 server assembly
@@ -126,5 +130,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 05-02-PLAN.md (auth infrastructure + middleware)
-Resume file: .planning/phases/05-rest-api-generation/05-03-PLAN.md
+Stopped at: Completed 05-01-PLAN.md (Huma API templates and GenerateAPI function)
+Resume file: .planning/phases/05-rest-api-generation/05-02-PLAN.md

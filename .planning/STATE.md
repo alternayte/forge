@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 6 of 8 (Hypermedia UI Generation)
-Plan: 9 of 9 in current phase (06 completed; 06-06 latest)
+Plan: 9 of 9 in current phase (08 completed out of order; 06-09 remaining)
 Status: In Progress
-Last activity: 2026-02-17 — Completed 06-06-PLAN.md (ScaffoldResource and DiffResource with skip-if-exists and diffmatchpatch)
+Last activity: 2026-02-17 — Completed 06-08-PLAN.md (wire HTML generation into orchestrator, htmlRoutes() added to forge routes CLI)
 
 Progress: [███████░░░] 54%
 
@@ -52,6 +52,7 @@ Progress: [███████░░░] 54%
 | Phase 06 P05 | 2 | 2 tasks | 4 files |
 | Phase 06 P03 | 5 | 2 tasks | 4 files |
 | Phase 06 P06 | 2 | 2 tasks | 4 files |
+| Phase 06 P08 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -152,6 +153,8 @@ Recent decisions affecting current work:
 - [Phase 06]: Mutability modifier generates editable-vs-readonly conditional rather than hiding — data visible to all, editable only by matching role
 - [Phase 06]: Filter section only rendered when filterableFields helper returns non-empty slice — avoids empty filter UI
 - [Phase 06]: DiffResource uses dmp.DiffPrettyText for human-readable output (not patch format) — intended for CLI display
+- [Phase 06]: htmlRoutes() returns 7 routes per resource at root path (no /api/v1/ prefix) with GET/POST/PUT/DELETE for Datastar SSE mutations
+- [Phase 06]: forge routes displays API and HTML sub-sections per resource with combined total route count
 
 ### Pending Todos
 

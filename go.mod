@@ -17,6 +17,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/peterldowns/pgtestdb v0.1.1
 	github.com/rs/cors v1.11.1
+	github.com/sergi/go-diff v1.4.0
 	github.com/sethvargo/go-limiter v1.1.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.48.0

@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 3: Query & Data Access** - Type-safe queries, CRUD operations, and database integration
 - [ ] **Phase 4: Action Layer & Error Handling** - Shared business logic layer for dual interface
 - [ ] **Phase 5: REST API Generation** - Huma integration, OpenAPI 3.1, and route generation
-- [ ] **Phase 6: Hypermedia UI Generation** - Templ/Datastar integration and HTML handlers
+- [x] **Phase 6: Hypermedia UI Generation** - Templ/Datastar integration and HTML handlers (completed 2026-02-17)
 - [ ] **Phase 7: Advanced Data Features** - Relationships, soft delete, multi-tenancy, audit logging
 - [ ] **Phase 8: Background Jobs & Production Readiness** - River integration, observability, CLI, deployment
 
@@ -131,7 +131,7 @@ Plans:
   7. Generated test factories create valid resource instances with builder pattern
   8. forgetest.NewTestDB and forgetest.NewApp enable HTTP testing
   9. Tailwind CSS compiles via standalone CLI binary (zero npm dependency verified)
-**Plans:** 8/9 plans executed
+**Plans:** 9/9 plans complete
 
 Plans:
 - [ ] 06-01-PLAN.md — Form primitives library (FormField, TextInput, etc.) and Datastar SSE helpers
@@ -193,6 +193,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. Query & Data Access | 0/3 | Planned | - |
 | 4. Action Layer & Error Handling | 0/3 | Planned | - |
 | 5. REST API Generation | 0/4 | Planned | - |
-| 6. Hypermedia UI Generation | 8/9 | In Progress|  |
+| 6. Hypermedia UI Generation | 9/9 | Complete   | 2026-02-17 |
 | 7. Advanced Data Features | 0/TBD | Not started | - |
 | 8. Background Jobs & Production Readiness | 0/TBD | Not started | - |

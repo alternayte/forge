@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 6 of 8 (Hypermedia UI Generation)
-Plan: 9 of 9 in current phase (08 completed out of order; 06-09 remaining)
-Status: In Progress
-Last activity: 2026-02-17 — Completed 06-08-PLAN.md (wire HTML generation into orchestrator, htmlRoutes() added to forge routes CLI)
+Plan: 9 of 9 in current phase (all plans complete)
+Status: Phase Complete
+Last activity: 2026-02-17 — Completed 06-09-PLAN.md (forge generate resource CLI, SetupHTML, Tailwind compilation helper)
 
-Progress: [███████░░░] 54%
+Progress: [████████░░] 63%
 
 ## Performance Metrics
 
@@ -37,6 +37,7 @@ Progress: [███████░░░] 54%
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
+| 06 | 09 | 3m | 2 | 4 |
 | 06 | 07 | 4m | 2 | 5 |
 | 06 | 04 | 2m | 2 | 3 |
 | 06 | 02 | 2m | 2 | 5 |
@@ -155,6 +156,10 @@ Recent decisions affecting current work:
 - [Phase 06]: DiffResource uses dmp.DiffPrettyText for human-readable output (not patch format) — intended for CLI display
 - [Phase 06]: htmlRoutes() returns 7 routes per resource at root path (no /api/v1/ prefix) with GET/POST/PUT/DELETE for Datastar SSE mutations
 - [Phase 06]: forge routes displays API and HTML sub-sections per resource with combined total route count
+- [Phase 06]: runTemplGenerate tries .forge/bin/templ first then falls back to PATH — forge tool sync preferred but not required
+- [Phase 06]: SetupHTML public group intentionally empty — app registers OAuth routes separately; forge cannot import generated auth code
+- [Phase 06]: RunTailwindWatch uses cmd.Start (not cmd.Run) and returns *exec.Cmd so caller controls process lifetime for forge dev
+- [Phase 06]: ScaffoldTailwindInput uses Tailwind v3 @tailwind directives (not v4 @import) — matches toolsync registry v3.4.17 pin
 
 ### Pending Todos
 
@@ -167,5 +172,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-06-PLAN.md (ScaffoldResource and DiffResource with skip-if-exists and diffmatchpatch)
-Resume file: .planning/phases/06-hypermedia-ui-generation/06-07-PLAN.md
+Stopped at: Completed 06-09-PLAN.md (forge generate resource CLI, SetupHTML session middleware, Tailwind compilation helper — Phase 6 complete)
+Resume file: .planning/phases/07-*/07-01-PLAN.md

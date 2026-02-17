@@ -12,6 +12,7 @@ type Config struct {
 	Database DatabaseConfig `toml:"database"`
 	Tools    ToolsConfig    `toml:"tools"`
 	Server   ServerConfig   `toml:"server"`
+	Session  SessionConfig  `toml:"session"`
 }
 
 // ProjectConfig holds project-level settings
@@ -38,6 +39,22 @@ type ToolsConfig struct {
 type ServerConfig struct {
 	Port int    `toml:"port"`
 	Host string `toml:"host"`
+}
+
+// SessionConfig holds session cookie and store settings
+type SessionConfig struct {
+	// Secret is the HMAC signing key for session data integrity. Should be a
+	// 32- or 64-byte random string. Not required when using pgxstore (server-
+	// side storage), but reserved for future HMAC signing use.
+	Secret string `toml:"secret"`
+
+	// Secure controls whether the session cookie is sent only over HTTPS.
+	// Set to true in production, false during local development.
+	Secure bool `toml:"secure"`
+
+	// Lifetime is the session duration expressed as a Go duration string
+	// (e.g. "24h", "168h"). Defaults to 24h when empty.
+	Lifetime string `toml:"lifetime"`
 }
 
 // Load reads and parses a forge.toml file

@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 
 ## Current Position
 
-Phase: 4 of 8 (Action Layer Error Handling)
-Plan: 3 of 3 in current phase
-Status: Completed
-Last activity: 2026-02-16 — Completed 04-03-PLAN.md
+Phase: 5 of 8 (REST API Generation)
+Plan: 2 of 3 in current phase
+Status: In Progress
+Last activity: 2026-02-17 — Completed 05-02-PLAN.md
 
-Progress: [████░░░░░░] 33%
+Progress: [█████░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 18
 - Average duration: 3.3 minutes
-- Total execution time: 0.85 hours
+- Total execution time: 0.95 hours
 
 **By Phase:**
 
@@ -31,17 +31,18 @@ Progress: [████░░░░░░] 33%
 | 02 | 5 | 18.0m | 3.6m |
 | 03 | 3 | 10.2m | 3.4m |
 | 04 | 3 | 6.1m | 2.0m |
+| 05 | 2 (so far) | ~6m | ~3m |
 
 **Recent Executions:**
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
+| 05 | 02 | 3m | 2 | 6 |
+| 05 | 01 | ~3m | 2 | 5 |
 | 04 | 03 | 2.1m | 2 | 5 |
 | 04 | 02 | 1.9m | 2 | 4 |
 | 04 | 01 | 2.1m | 2 | 4 |
 | 03 | 02 | 3.7m | 2 | 10 |
-| 03 | 01 | 4.0m | 2 | 9 |
-| 03 | 03 | 2.5m | 2 | 2 |
 
 ## Accumulated Context
 
@@ -109,6 +110,10 @@ Recent decisions affecting current work:
 - [Phase 04-03]: JSON errors follow RFC 9457 shape using simple fmt.Fprintf (no json.Marshal dependency)
 - [Phase 04-03]: HTML errors use inline template string (templ templates come in Phase 6)
 - [Phase 04-03]: Import stdlib errors as stderrors to avoid conflict with gen/errors package
+- [Phase 05-02]: huma.API passed to AuthMiddleware constructor so WriteErr can produce structured 401 responses
+- [Phase 05-02]: validateBearerToken/validateAPIKey return updated huma.Context (not mutate) to thread context through middleware chain
+- [Phase 05-02]: Phase 5 rate limiting uses Default tier for all requests — tiered enforcement deferred to Plan 03 server assembly
+- [Phase 05-02]: CORSMiddleware logs warning and disables credentials when wildcard origin combined with AllowCredentials (CORS spec violation guard)
 
 ### Pending Todos
 
@@ -120,6 +125,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-16
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-rest-api-generation/05-CONTEXT.md
+Last session: 2026-02-17
+Stopped at: Completed 05-02-PLAN.md (auth infrastructure + middleware)
+Resume file: .planning/phases/05-rest-api-generation/05-03-PLAN.md

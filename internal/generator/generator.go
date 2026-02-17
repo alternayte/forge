@@ -78,6 +78,11 @@ func Generate(resources []parser.ResourceIR, cfg GenerateConfig) error {
 		return err
 	}
 
+	// Generate HTML primitives, SSE helpers, and route registration
+	if err := GenerateHTML(resources, cfg.OutputDir, cfg.ProjectModule); err != nil {
+		return err
+	}
+
 	return nil
 }
 

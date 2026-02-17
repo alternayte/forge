@@ -24,6 +24,7 @@ func init() {
 	rootCmd.AddCommand(newMigrateCmd())
 	rootCmd.AddCommand(newDBCmd())
 	rootCmd.AddCommand(newDevCmd())
+	rootCmd.AddCommand(newRoutesCmd())
 }
 
 // Execute runs the root command

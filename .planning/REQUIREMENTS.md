@@ -111,8 +111,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **AUTH-02**: Developer can configure OAuth2 providers (Google, GitHub)
 - [ ] **AUTH-03**: Sessions are stored in PostgreSQL (no Redis dependency)
 - [ ] **AUTH-04**: API authentication supports bearer tokens and API keys (X-API-Key header)
-- [ ] **AUTH-05**: Generated actions check CRUD-level permissions before executing operations
-- [ ] **AUTH-06**: Generated actions strip invisible fields based on current user's role before returning data
+- [x] **AUTH-05**: Generated actions check CRUD-level permissions before executing operations
+- [x] **AUTH-06**: Generated actions strip invisible fields based on current user's role before returning data
 
 ### Multi-Tenancy
 
@@ -291,8 +291,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-02 | Phase 6 | Pending |
 | AUTH-03 | Phase 6 | Pending |
 | AUTH-04 | Phase 5 | Pending |
-| AUTH-05 | Phase 7 | Pending |
-| AUTH-06 | Phase 7 | Pending |
+| AUTH-05 | Phase 7 | Complete |
+| AUTH-06 | Phase 7 | Complete |
 | TENANT-01 | Phase 7 | Pending |
 | TENANT-02 | Phase 7 | Pending |
 | TENANT-03 | Phase 7 | Pending |

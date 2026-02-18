@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 7 of 8 (Advanced Data Features)
-Plan: 2 of 5 in current phase
+Plan: 4 of 5 in current phase
 Status: In Progress
-Last activity: 2026-02-18 — Completed 07-02-PLAN.md (Soft delete query mods, partial unique indexes, Delete/Restore actions)
+Last activity: 2026-02-18 — Completed 07-04-PLAN.md (Permission checks and field visibility stripping in generated actions)
 
-Progress: [████████░░] 66%
+Progress: [████████░░] 70%
 
 ## Performance Metrics
 
@@ -56,6 +56,8 @@ Progress: [████████░░] 66%
 | Phase 06 P06 | 2 | 2 tasks | 4 files |
 | Phase 06 P08 | 2 | 2 tasks | 4 files |
 | Phase 07 P02 | 2m | 2 tasks | 3 files |
+| 07 | 03 | 6m | 2 | 5 |
+| Phase 07 P04 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -168,6 +170,10 @@ Recent decisions affecting current work:
 - [Phase 07]: No hard DELETE generated for SoftDelete resources — soft delete is final state; raw SQL available if truly needed
 - [Phase 07]: Restore method on {{resource}}Actions interface (not DefaultActions only) — contract preserved for custom implementations
 - [Phase 07]: ActiveMod prepended to filterMods (not appended) in List — soft delete exclusion established before user-supplied filters
+- [Phase 07-04]: Permission checks live in generated action methods (not handlers) — enforced at action layer for both HTML and API handlers without duplication
+- [Phase 07-04]: roleFilter returns map[string]any so invisible field keys are truly absent from JSON (not just zero-valued)
+- [Phase 07-04]: checkPermission generated per-resource-file (not a shared helper) to keep generated code self-contained without forge imports
+- [Phase 07-04]: Restore method uses delete permission gate — inverse operation shares the same authorization requirement
 
 ### Pending Todos
 
@@ -180,5 +186,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 07-02-PLAN.md (Soft delete query mods, partial unique indexes, Delete/Restore actions)
-Resume file: .planning/phases/07-advanced-data-features/07-03-PLAN.md
+Stopped at: Completed 07-04-PLAN.md (Permission checks and field visibility stripping in generated actions)
+Resume file: .planning/phases/07-advanced-data-features/07-05-PLAN.md

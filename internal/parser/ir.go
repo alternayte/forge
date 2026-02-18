@@ -35,15 +35,21 @@ type RelationshipIR struct {
 	Table      string // Related table name
 	OnDelete   string // Cascade action (empty string = default)
 	Optional   bool   // Whether relationship is optional
+	Eager      bool   // Whether to eager-load this relationship
 	SourceLine int    // Line number in source file
 }
 
+// PermissionsIR maps operation names to the roles allowed to perform them.
+// Example: {"list": ["admin", "editor"], "delete": ["admin"]}
+type PermissionsIR map[string][]string
+
 // ResourceOptionsIR represents resource-level options.
 type ResourceOptionsIR struct {
-	SoftDelete   bool // Enable soft delete
-	Auditable    bool // Enable audit logging
-	TenantScoped bool // Enable multi-tenancy scoping
-	Searchable   bool // Enable full-text search
+	SoftDelete   bool          // Enable soft delete
+	Auditable    bool          // Enable audit logging
+	TenantScoped bool          // Enable multi-tenancy scoping
+	Searchable   bool          // Enable full-text search
+	Permissions  PermissionsIR // Role-based permission rules per operation
 }
 
 // ParseResult represents the output of parsing a directory of schema files.

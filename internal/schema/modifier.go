@@ -19,6 +19,8 @@ const (
 	ModPlaceholder
 	ModHelp
 	ModPrimaryKey
+	ModVisibility  // field-level visibility role restriction
+	ModMutability  // field-level mutability role restriction
 )
 
 // Modifier represents a modification or constraint applied to a field.

@@ -111,3 +111,13 @@ func (f *Field) Placeholder(s string) *Field {
 func (f *Field) Help(s string) *Field {
 	return f.addModifier(Modifier{Type: ModHelp, Value: s})
 }
+
+// Visibility restricts field visibility to the given role.
+func (f *Field) Visibility(role string) *Field {
+	return f.addModifier(Modifier{Type: ModVisibility, Value: role})
+}
+
+// Mutability restricts field mutability to the given role.
+func (f *Field) Mutability(role string) *Field {
+	return f.addModifier(Modifier{Type: ModMutability, Value: role})
+}

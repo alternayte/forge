@@ -43,6 +43,13 @@ table "{{plural (snake .Name)}}" {
   }
   {{end}}
 
+  {{if .Options.TenantScoped}}
+  column "tenant_id" {
+    type = uuid
+    null = false
+  }
+  {{end}}
+
   primary_key {
     columns = [column.id]
   }
@@ -67,6 +74,32 @@ table "{{plural (snake .Name)}}" {
     columns = [column.{{snake .Name}}]
   }
   {{end}}
+  {{end}}
+
+  {{if .Options.TenantScoped}}
+  index "{{plural (snake $resourceName)}}_tenant_id_idx" {
+    columns = [column.tenant_id]
+  }
+
+  row_level_security {
+    enabled  = true
+    enforced = true
+  }
+
+  # Tenant isolation RLS policy (defense-in-depth safety net).
+  # Application-level WHERE clause via TenantMod handles performance (index usage).
+  # RLS blocks access when SET LOCAL app.current_tenant is not set (secure by default).
+  policy "tenant_isolation" {
+    for    = SELECT
+    to     = [PUBLIC]
+    using  = "(tenant_id = current_setting('app.current_tenant')::uuid)"
+  }
+  policy "tenant_isolation_mod" {
+    for        = ALL
+    to         = [PUBLIC]
+    using      = "(tenant_id = current_setting('app.current_tenant')::uuid)"
+    with_check = "(tenant_id = current_setting('app.current_tenant')::uuid)"
+  }
   {{end}}
 }
 {{end}}

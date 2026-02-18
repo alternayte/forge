@@ -4,6 +4,10 @@ package queries
 
 import (
 	"{{.ProjectModule}}/gen/models"
+	{{- if .Options.TenantScoped}}
+	"context"
+	forgeauth "github.com/forge-framework/forge/internal/auth"
+	{{- end}}
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
@@ -103,5 +107,17 @@ func (f {{$resource}}Filters) ActiveMod() sm.QueryMod[*psql.SelectQuery] {
 // OnlyTrashedMod returns a query mod that shows only soft-deleted records.
 func (f {{$resource}}Filters) OnlyTrashedMod() sm.QueryMod[*psql.SelectQuery] {
 	return sm.Where(psql.Quote("deleted_at").IsNotNull())
+}
+{{- end}}
+{{- if .Options.TenantScoped}}
+
+// TenantMod scopes the query to the current tenant from context.
+// Panics if tenant ID is not in context — ensure TenantMiddleware is applied.
+func (f {{$resource}}Filters) TenantMod(ctx context.Context) sm.QueryMod[*psql.SelectQuery] {
+	tenantID, ok := forgeauth.TenantFromContext(ctx)
+	if !ok {
+		panic("{{$resource}}: tenant ID required in context — is TenantMiddleware applied?")
+	}
+	return sm.Where(psql.Quote("tenant_id").EQ(psql.Arg(tenantID)))
 }
 {{- end}}

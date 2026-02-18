@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 7 of 8 (Advanced Data Features)
-Plan: 1 of 5 in current phase
+Plan: 2 of 5 in current phase
 Status: In Progress
-Last activity: 2026-02-18 — Completed 07-01-PLAN.md (Visibility/Mutability/Permission/Eager schema DSL, parser IR, and funcmap foundation)
+Last activity: 2026-02-18 — Completed 07-02-PLAN.md (Soft delete query mods, partial unique indexes, Delete/Restore actions)
 
 Progress: [████████░░] 66%
 
@@ -55,6 +55,7 @@ Progress: [████████░░] 66%
 | Phase 06 P03 | 5 | 2 tasks | 4 files |
 | Phase 06 P06 | 2 | 2 tasks | 4 files |
 | Phase 06 P08 | 2 | 2 tasks | 4 files |
+| Phase 07 P02 | 2m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -164,6 +165,9 @@ Recent decisions affecting current work:
 - [Phase 07-01]: Permission() is a SchemaItem (not an Option) — permission rules kept separate from boolean feature flags like SoftDelete/Auditable
 - [Phase 07-01]: PermissionsIR is map[string][]string — operation-keyed for O(1) lookup in templates; supports multiple permission rules per resource
 - [Phase 07-01]: Eager is a modifier on RelationshipIR (not a standalone type) — consistent with Optional and OnDelete modifier pattern
+- [Phase 07]: No hard DELETE generated for SoftDelete resources — soft delete is final state; raw SQL available if truly needed
+- [Phase 07]: Restore method on {{resource}}Actions interface (not DefaultActions only) — contract preserved for custom implementations
+- [Phase 07]: ActiveMod prepended to filterMods (not appended) in List — soft delete exclusion established before user-supplied filters
 
 ### Pending Todos
 
@@ -176,5 +180,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 07-01-PLAN.md (Visibility/Mutability/Permission/Eager schema DSL, parser IR, extractor wiring, and funcmap helpers)
-Resume file: .planning/phases/07-advanced-data-features/07-02-PLAN.md
+Stopped at: Completed 07-02-PLAN.md (Soft delete query mods, partial unique indexes, Delete/Restore actions)
+Resume file: .planning/phases/07-advanced-data-features/07-03-PLAN.md

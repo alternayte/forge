@@ -57,10 +57,10 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **DATA-03**: Generated query builder supports offset-based pagination
 - [ ] **DATA-04**: Generated query builder supports cursor-based pagination with opaque base64 cursors
 - [ ] **DATA-05**: When TenantScoped is true, all generated queries automatically include tenant_id filtering from context
-- [ ] **DATA-06**: When SoftDelete is true, all queries exclude soft-deleted records by default
-- [ ] **DATA-07**: Developer can use WithTrashed() and OnlyTrashed() to include/only-show soft-deleted records
-- [ ] **DATA-08**: When a field is Unique on a SoftDelete resource, Atlas generates a partial unique index (WHERE deleted_at IS NULL)
-- [ ] **DATA-09**: Generated actions include a Restore method for SoftDelete resources
+- [x] **DATA-06**: When SoftDelete is true, all queries exclude soft-deleted records by default
+- [x] **DATA-07**: Developer can use WithTrashed() and OnlyTrashed() to include/only-show soft-deleted records
+- [x] **DATA-08**: When a field is Unique on a SoftDelete resource, Atlas generates a partial unique index (WHERE deleted_at IS NULL)
+- [x] **DATA-09**: Generated actions include a Restore method for SoftDelete resources
 - [ ] **DATA-10**: Developer can write raw SQLC queries in queries/custom/ as an escape hatch
 - [ ] **DATA-11**: forge.Transaction wraps operations in a database transaction with River job enqueueing in the same transaction
 - [ ] **DATA-12**: Relationship preloading (Eager) automatically excludes soft-deleted related records
@@ -252,10 +252,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-03 | Phase 3 | Pending |
 | DATA-04 | Phase 3 | Pending |
 | DATA-05 | Phase 7 | Pending |
-| DATA-06 | Phase 7 | Pending |
-| DATA-07 | Phase 7 | Pending |
-| DATA-08 | Phase 7 | Pending |
-| DATA-09 | Phase 7 | Pending |
+| DATA-06 | Phase 7 | Complete |
+| DATA-07 | Phase 7 | Complete |
+| DATA-08 | Phase 7 | Complete |
+| DATA-09 | Phase 7 | Complete |
 | DATA-10 | Phase 3 | Pending |
 | DATA-11 | Phase 3 | Pending |
 | DATA-12 | Phase 7 | Pending |

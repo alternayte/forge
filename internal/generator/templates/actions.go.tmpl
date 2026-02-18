@@ -29,6 +29,11 @@ type {{.Name}}Actions interface {
 
 	// Delete removes a {{.Name}} by ID.
 	Delete(ctx context.Context, id uuid.UUID) error
+{{- if .Options.SoftDelete}}
+
+	// Restore restores a soft-deleted {{.Name}} by clearing its deleted_at timestamp.
+	Restore(ctx context.Context, id uuid.UUID) (*models.{{.Name}}, error)
+{{- end}}
 }
 
 // Default{{.Name}}Actions is the default implementation of {{.Name}}Actions.
@@ -41,6 +46,10 @@ type Default{{.Name}}Actions struct {
 func (a *Default{{.Name}}Actions) List(ctx context.Context, filter models.{{.Name}}Filter, sort models.{{.Name}}Sort, page int, pageSize int) ([]models.{{.Name}}, int64, error) {
 	// Build query mods from filter
 	filterMods := queries.{{.Name}}FilterMods(filter)
+{{- if .Options.SoftDelete}}
+	// Exclude soft-deleted records by default (DATA-06)
+	filterMods = append(filterMods, queries.{{.Name}}Filters{}.ActiveMod())
+{{- end}}
 
 	// Build sort mod
 	sortMod := queries.{{.Name}}SortMod(sort)
@@ -56,6 +65,10 @@ func (a *Default{{.Name}}Actions) List(ctx context.Context, filter models.{{.Nam
 
 // Get retrieves a single {{.Name}} by ID.
 func (a *Default{{.Name}}Actions) Get(ctx context.Context, id uuid.UUID) (*models.{{.Name}}, error) {
+{{- if .Options.SoftDelete}}
+	// Note: Get excludes soft-deleted records. Use a custom action override with
+	// OnlyTrashedMod or no ActiveMod filter for admin restore views.
+{{- end}}
 	// TODO: Execute Bob query to fetch by ID
 	// This will be implemented when Bob query execution layer is complete.
 	// For now, return not found error to maintain compilable interface.
@@ -97,10 +110,38 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 
 // Delete removes a {{.Name}} by ID.
 func (a *Default{{.Name}}Actions) Delete(ctx context.Context, id uuid.UUID) error {
+{{- if .Options.SoftDelete}}
+	// Soft delete: set deleted_at timestamp instead of removing the record.
+	// Per design: no hard delete — soft delete is final state. Developer uses raw SQL if needed.
+	_, err := a.DB.Exec(ctx,
+		`UPDATE {{plural (snake .Name)}} SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL`,
+		id,
+	)
+	if err != nil {
+		return errors.InternalError("failed to soft-delete {{.Name}}")
+	}
+	return nil
+{{- else}}
+	// Hard delete
 	// TODO: Execute Bob delete query
-	// This will be implemented when Bob query execution layer is complete.
-	// For now, return not found error to maintain compilable interface.
 	_ = id
-
 	return errors.NotFound("{{.Name}}", id.String())
+{{- end}}
 }
+{{- if .Options.SoftDelete}}
+
+// Restore restores a soft-deleted {{.Name}} by clearing deleted_at.
+func (a *Default{{.Name}}Actions) Restore(ctx context.Context, id uuid.UUID) (*models.{{.Name}}, error) {
+	result, err := a.DB.Exec(ctx,
+		`UPDATE {{plural (snake .Name)}} SET deleted_at = NULL WHERE id = $1 AND deleted_at IS NOT NULL`,
+		id,
+	)
+	if err != nil {
+		return nil, errors.InternalError("failed to restore {{.Name}}")
+	}
+	if result.RowsAffected() == 0 {
+		return nil, errors.NotFound("{{.Name}}", id.String())
+	}
+	return a.Get(ctx, id)
+}
+{{- end}}

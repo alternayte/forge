@@ -17,6 +17,9 @@ func New{{.Name}}() *models.{{.Name}} {
 		{{range .Fields}}{{if not (isIDField .)}}
 		{{.Name}}: {{defaultTestValue .}},
 		{{end}}{{end}}
+		{{- if .Options.TenantScoped}}
+		TenantID: uuid.MustParse("00000000-0000-0000-0000-000000000001"), // default test tenant
+		{{- end}}
 	}
 }
 
@@ -37,6 +40,13 @@ func (b *{{$.Name}}Builder) With{{.Name}}(v {{goType .Type}}) *{{$.Name}}Builder
 	return b
 }
 {{end}}{{end}}
+{{- if .Options.TenantScoped}}
+// WithTenantID sets the TenantID field.
+func (b *{{.Name}}Builder) WithTenantID(v uuid.UUID) *{{.Name}}Builder {
+	b.instance.TenantID = v
+	return b
+}
+{{- end}}
 
 // Build returns the constructed {{.Name}}.
 func (b *{{.Name}}Builder) Build() *models.{{.Name}} {

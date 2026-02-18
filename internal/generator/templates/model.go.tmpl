@@ -13,6 +13,9 @@ import (
 // {{.Name}} represents a {{.Name}} record.
 type {{.Name}} struct {
 	ID uuid.UUID `json:"id" db:"id"`
+	{{- if .Options.TenantScoped}}
+	TenantID uuid.UUID `json:"tenant_id" db:"tenant_id"`
+	{{- end}}
 	{{- range .Fields}}
 	{{- if not (isIDField .)}}
 	{{.Name}} {{goType .Type}} `json:"{{snake .Name}}" db:"{{snake .Name}}"`

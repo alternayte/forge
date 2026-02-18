@@ -15,8 +15,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **SCHEMA-04**: Developer can enable SoftDelete, Auditable, TenantScoped, and Searchable options per resource
 - [ ] **SCHEMA-05**: Developer can define Timestamps() to auto-add created_at and updated_at fields
 - [ ] **SCHEMA-06**: Developer can define Enum fields with specific allowed values and a Default
-- [ ] **SCHEMA-07**: Developer can define field-level Visibility and Mutability based on roles
-- [ ] **SCHEMA-08**: Developer can define CRUD-level Permissions (List, Read, Create, Update, Delete) per resource
+- [x] **SCHEMA-07**: Developer can define field-level Visibility and Mutability based on roles
+- [x] **SCHEMA-08**: Developer can define CRUD-level Permissions (List, Read, Create, Update, Delete) per resource
 - [ ] **SCHEMA-09**: Developer can define schema Hooks (AfterCreate, AfterUpdate) referencing River job kinds
 
 ### Parser
@@ -222,8 +222,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCHEMA-04 | Phase 1 | Pending |
 | SCHEMA-05 | Phase 1 | Pending |
 | SCHEMA-06 | Phase 1 | Pending |
-| SCHEMA-07 | Phase 7 | Pending |
-| SCHEMA-08 | Phase 7 | Pending |
+| SCHEMA-07 | Phase 7 | Complete |
+| SCHEMA-08 | Phase 7 | Complete |
 | SCHEMA-09 | Phase 8 | Pending |
 | PARSE-01 | Phase 1 | Pending |
 | PARSE-02 | Phase 1 | Pending |

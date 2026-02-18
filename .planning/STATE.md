@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 
 ## Current Position
 
-Phase: 6 of 8 (Hypermedia UI Generation)
-Plan: 9 of 9 in current phase (all plans complete)
-Status: Phase Complete
-Last activity: 2026-02-17 — Completed 06-09-PLAN.md (forge generate resource CLI, SetupHTML, Tailwind compilation helper)
+Phase: 7 of 8 (Advanced Data Features)
+Plan: 1 of 5 in current phase
+Status: In Progress
+Last activity: 2026-02-18 — Completed 07-01-PLAN.md (Visibility/Mutability/Permission/Eager schema DSL, parser IR, and funcmap foundation)
 
-Progress: [████████░░] 63%
+Progress: [████████░░] 66%
 
 ## Performance Metrics
 
@@ -37,6 +37,7 @@ Progress: [████████░░] 63%
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
+| 07 | 01 | 2m | 2 | 6 |
 | 06 | 09 | 3m | 2 | 4 |
 | 06 | 07 | 4m | 2 | 5 |
 | 06 | 04 | 2m | 2 | 3 |
@@ -160,6 +161,9 @@ Recent decisions affecting current work:
 - [Phase 06]: SetupHTML public group intentionally empty — app registers OAuth routes separately; forge cannot import generated auth code
 - [Phase 06]: RunTailwindWatch uses cmd.Start (not cmd.Run) and returns *exec.Cmd so caller controls process lifetime for forge dev
 - [Phase 06]: ScaffoldTailwindInput uses Tailwind v3 @tailwind directives (not v4 @import) — matches toolsync registry v3.4.17 pin
+- [Phase 07-01]: Permission() is a SchemaItem (not an Option) — permission rules kept separate from boolean feature flags like SoftDelete/Auditable
+- [Phase 07-01]: PermissionsIR is map[string][]string — operation-keyed for O(1) lookup in templates; supports multiple permission rules per resource
+- [Phase 07-01]: Eager is a modifier on RelationshipIR (not a standalone type) — consistent with Optional and OnDelete modifier pattern
 
 ### Pending Todos
 
@@ -171,6 +175,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-17
-Stopped at: Completed 06-09-PLAN.md (forge generate resource CLI, SetupHTML session middleware, Tailwind compilation helper — Phase 6 complete)
-Resume file: .planning/phases/07-*/07-01-PLAN.md
+Last session: 2026-02-18
+Stopped at: Completed 07-01-PLAN.md (Visibility/Mutability/Permission/Eager schema DSL, parser IR, extractor wiring, and funcmap helpers)
+Resume file: .planning/phases/07-advanced-data-features/07-02-PLAN.md

@@ -4,6 +4,9 @@ package actions
 
 import (
 	"context"
+{{- if or (hasAnyPermission .Options) (hasAnyVisibility .Fields)}}
+	forgeauth "github.com/forge-framework/forge/internal/auth"
+{{- end}}
 
 	"github.com/google/uuid"
 	"{{.ProjectModule}}/gen/errors"
@@ -34,6 +37,11 @@ type {{.Name}}Actions interface {
 	// Restore restores a soft-deleted {{.Name}} by clearing its deleted_at timestamp.
 	Restore(ctx context.Context, id uuid.UUID) (*models.{{.Name}}, error)
 {{- end}}
+{{- if hasAnyVisibility .Fields}}
+
+	// RoleFilterList strips invisible fields from a list of items based on user role.
+	RoleFilterList(role string, items []models.{{.Name}}) []map[string]any
+{{- end}}
 }
 
 // Default{{.Name}}Actions is the default implementation of {{.Name}}Actions.
@@ -44,6 +52,11 @@ type Default{{.Name}}Actions struct {
 
 // List retrieves {{plural .Name | lower}} with filtering, sorting, and pagination.
 func (a *Default{{.Name}}Actions) List(ctx context.Context, filter models.{{.Name}}Filter, sort models.{{.Name}}Sort, page int, pageSize int) ([]models.{{.Name}}, int64, error) {
+{{- if hasPermission .Options "list"}}
+	if err := checkPermission(ctx, {{permissionRoles .Options "list"}}); err != nil {
+		return nil, 0, err
+	}
+{{- end}}
 	// Build query mods from filter
 	filterMods := queries.{{.Name}}FilterMods(filter)
 {{- if .Options.SoftDelete}}
@@ -65,6 +78,11 @@ func (a *Default{{.Name}}Actions) List(ctx context.Context, filter models.{{.Nam
 
 // Get retrieves a single {{.Name}} by ID.
 func (a *Default{{.Name}}Actions) Get(ctx context.Context, id uuid.UUID) (*models.{{.Name}}, error) {
+{{- if hasPermission .Options "read"}}
+	if err := checkPermission(ctx, {{permissionRoles .Options "read"}}); err != nil {
+		return nil, err
+	}
+{{- end}}
 {{- if .Options.SoftDelete}}
 	// Note: Get excludes soft-deleted records. Use a custom action override with
 	// OnlyTrashedMod or no ActiveMod filter for admin restore views.
@@ -79,6 +97,11 @@ func (a *Default{{.Name}}Actions) Get(ctx context.Context, id uuid.UUID) (*model
 
 // Create creates a new {{.Name}} after validation.
 func (a *Default{{.Name}}Actions) Create(ctx context.Context, input models.{{.Name}}Create) (*models.{{.Name}}, error) {
+{{- if hasPermission .Options "create"}}
+	if err := checkPermission(ctx, {{permissionRoles .Options "create"}}); err != nil {
+		return nil, err
+	}
+{{- end}}
 	// Validate input using generated validation
 	valErrs := validation.Validate{{.Name}}Create(input)
 	if valErrs.HasErrors() {
@@ -94,6 +117,11 @@ func (a *Default{{.Name}}Actions) Create(ctx context.Context, input models.{{.Na
 
 // Update updates an existing {{.Name}} after validation.
 func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, input models.{{.Name}}Update) (*models.{{.Name}}, error) {
+{{- if hasPermission .Options "update"}}
+	if err := checkPermission(ctx, {{permissionRoles .Options "update"}}); err != nil {
+		return nil, err
+	}
+{{- end}}
 	// Validate input using generated validation
 	valErrs := validation.Validate{{.Name}}Update(input)
 	if valErrs.HasErrors() {
@@ -110,6 +138,11 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 
 // Delete removes a {{.Name}} by ID.
 func (a *Default{{.Name}}Actions) Delete(ctx context.Context, id uuid.UUID) error {
+{{- if hasPermission .Options "delete"}}
+	if err := checkPermission(ctx, {{permissionRoles .Options "delete"}}); err != nil {
+		return err
+	}
+{{- end}}
 {{- if .Options.SoftDelete}}
 	// Soft delete: set deleted_at timestamp instead of removing the record.
 	// Per design: no hard delete — soft delete is final state. Developer uses raw SQL if needed.
@@ -132,6 +165,11 @@ func (a *Default{{.Name}}Actions) Delete(ctx context.Context, id uuid.UUID) erro
 
 // Restore restores a soft-deleted {{.Name}} by clearing deleted_at.
 func (a *Default{{.Name}}Actions) Restore(ctx context.Context, id uuid.UUID) (*models.{{.Name}}, error) {
+{{- if hasPermission .Options "delete"}}
+	if err := checkPermission(ctx, {{permissionRoles .Options "delete"}}); err != nil {
+		return nil, err
+	}
+{{- end}}
 	result, err := a.DB.Exec(ctx,
 		`UPDATE {{plural (snake .Name)}} SET deleted_at = NULL WHERE id = $1 AND deleted_at IS NOT NULL`,
 		id,
@@ -143,5 +181,64 @@ func (a *Default{{.Name}}Actions) Restore(ctx context.Context, id uuid.UUID) (*m
 		return nil, errors.NotFound("{{.Name}}", id.String())
 	}
 	return a.Get(ctx, id)
+}
+{{- end}}
+{{- if hasAnyPermission .Options}}
+
+// checkPermission verifies the current user's role is in the allowed roles list.
+// Returns a Forbidden error if the role is not permitted.
+func checkPermission(ctx context.Context, allowedRoles ...string) error {
+	role := forgeauth.RoleFromContext(ctx)
+	for _, r := range allowedRoles {
+		if r == role {
+			return nil
+		}
+	}
+	return errors.Forbidden("insufficient permissions")
+}
+{{- end}}
+{{- if hasAnyVisibility .Fields}}
+
+// roleFilter returns a map representation of the model with invisible fields omitted
+// based on the current user's role. Fields with Visibility("role") are only included
+// when the user's role matches. Fields without Visibility are always included.
+// Per user decision: invisible fields omitted entirely (key doesn't appear in JSON).
+func (a *Default{{.Name}}Actions) roleFilter(role string, item models.{{.Name}}) map[string]any {
+	result := map[string]any{
+		"id": item.ID,
+		{{- range .Fields}}
+		{{- if not (isIDField .)}}
+		{{- if not (hasModifier .Modifiers "Visibility")}}
+		"{{snake .Name}}": item.{{.Name}},
+		{{- end}}
+		{{- end}}
+		{{- end}}
+		{{- if .HasTimestamps}}
+		"created_at": item.CreatedAt,
+		"updated_at": item.UpdatedAt,
+		{{- end}}
+		{{- if .Options.SoftDelete}}
+		"deleted_at": item.DeletedAt,
+		{{- end}}
+	}
+	{{- range .Fields}}
+	{{- if and (not (isIDField .)) (hasModifier .Modifiers "Visibility")}}
+	// Field {{.Name}} visible only for role "{{getModifierValue .Modifiers "Visibility"}}"
+	if role == "" || role == "{{getModifierValue .Modifiers "Visibility"}}" {
+		result["{{snake .Name}}"] = item.{{.Name}}
+	}
+	{{- end}}
+	{{- end}}
+	return result
+}
+
+// RoleFilterList applies roleFilter to a slice of items, stripping invisible fields
+// based on the current user's role.
+func (a *Default{{.Name}}Actions) RoleFilterList(role string, items []models.{{.Name}}) []map[string]any {
+	result := make([]map[string]any, len(items))
+	for i, item := range items {
+		result[i] = a.roleFilter(role, item)
+	}
+	return result
 }
 {{- end}}

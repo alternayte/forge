@@ -130,9 +130,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Audit Logging
 
-- [ ] **AUDIT-01**: When Auditable is true, created_by and updated_by columns are auto-populated from authenticated user
-- [ ] **AUDIT-02**: When Auditable is true, changes are recorded in audit_log table with JSONB diffs of old/new values
-- [ ] **AUDIT-03**: No-op updates (no actual changes) do not generate audit log entries
+- [x] **AUDIT-01**: When Auditable is true, created_by and updated_by columns are auto-populated from authenticated user
+- [x] **AUDIT-02**: When Auditable is true, changes are recorded in audit_log table with JSONB diffs of old/new values
+- [x] **AUDIT-03**: No-op updates (no actual changes) do not generate audit log entries
 
 ### SSE & Real-Time
 
@@ -301,9 +301,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | JOBS-02 | Phase 8 | Pending |
 | JOBS-03 | Phase 8 | Pending |
 | JOBS-04 | Phase 8 | Pending |
-| AUDIT-01 | Phase 7 | Pending |
-| AUDIT-02 | Phase 7 | Pending |
-| AUDIT-03 | Phase 7 | Pending |
+| AUDIT-01 | Phase 7 | Complete |
+| AUDIT-02 | Phase 7 | Complete |
+| AUDIT-03 | Phase 7 | Complete |
 | SSE-01 | Phase 8 | Pending |
 | SSE-02 | Phase 8 | Pending |
 | SSE-03 | Phase 8 | Pending |

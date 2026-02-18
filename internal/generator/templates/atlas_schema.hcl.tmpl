@@ -50,6 +50,17 @@ table "{{plural (snake .Name)}}" {
   }
   {{end}}
 
+  {{if .Options.Auditable}}
+  column "created_by" {
+    type = uuid
+    null = true
+  }
+  column "updated_by" {
+    type = uuid
+    null = true
+  }
+  {{end}}
+
   primary_key {
     columns = [column.id]
   }
@@ -128,3 +139,54 @@ table "sessions" {
     columns = [column.expiry]
   }
 }
+
+{{if hasAuditableResource .Resources}}
+# Audit log table for tracking all changes to Auditable resources.
+# Single shared table — resource_type and resource_id identify the target.
+# Per design: full before/after JSONB diff for every changed field.
+table "audit_logs" {
+  schema = schema.public
+
+  column "id" {
+    type    = uuid
+    default = sql("gen_random_uuid()")
+    null    = false
+  }
+  column "resource_type" {
+    type = varchar(255)
+    null = false
+  }
+  column "resource_id" {
+    type = uuid
+    null = false
+  }
+  column "operation" {
+    type = varchar(50)
+    null = false
+  }
+  column "changed_fields" {
+    type = jsonb
+    null = true
+  }
+  column "created_by" {
+    type = uuid
+    null = true
+  }
+  column "created_at" {
+    type    = timestamptz
+    default = sql("now()")
+    null    = false
+  }
+
+  primary_key {
+    columns = [column.id]
+  }
+
+  index "audit_logs_resource_idx" {
+    columns = [column.resource_type, column.resource_id]
+  }
+  index "audit_logs_created_at_idx" {
+    columns = [column.created_at]
+  }
+}
+{{end}}

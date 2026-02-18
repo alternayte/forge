@@ -28,6 +28,10 @@ type {{.Name}} struct {
 	{{- if .Options.SoftDelete}}
 	DeletedAt *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
 	{{- end}}
+	{{- if .Options.Auditable}}
+	CreatedBy *uuid.UUID `json:"created_by,omitempty" db:"created_by"`
+	UpdatedBy *uuid.UUID `json:"updated_by,omitempty" db:"updated_by"`
+	{{- end}}
 }
 
 // {{.Name}}Create holds data for creating a new {{.Name}}.

@@ -170,6 +170,10 @@ Recent decisions affecting current work:
 - [Phase 07]: No hard DELETE generated for SoftDelete resources — soft delete is final state; raw SQL available if truly needed
 - [Phase 07]: Restore method on {{resource}}Actions interface (not DefaultActions only) — contract preserved for custom implementations
 - [Phase 07]: ActiveMod prepended to filterMods (not appended) in List — soft delete exclusion established before user-supplied filters
+- [Phase 07-03]: TenantMod panics (not errors) when tenant missing from context — fast fail signals middleware misconfiguration rather than returning error to caller
+- [Phase 07-03]: PathTenantResolver supports both /tenants/{uuid}/... and /{uuid}/... path patterns for flexibility
+- [Phase 07-03]: forgeauth alias used for auth import in queries template to avoid collision with gen/auth package
+- [Phase 07-03]: RLS policy uses current_setting('app.current_tenant')::uuid — middleware runs SET LOCAL app.current_tenant at transaction start (per prior user decision)
 - [Phase 07-04]: Permission checks live in generated action methods (not handlers) — enforced at action layer for both HTML and API handlers without duplication
 - [Phase 07-04]: roleFilter returns map[string]any so invisible field keys are truly absent from JSON (not just zero-valued)
 - [Phase 07-04]: checkPermission generated per-resource-file (not a shared helper) to keep generated code self-contained without forge imports

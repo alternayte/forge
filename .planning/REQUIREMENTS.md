@@ -56,7 +56,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **DATA-02**: Generated query builder supports dynamic sorting with type-safe ORDER BY
 - [ ] **DATA-03**: Generated query builder supports offset-based pagination
 - [ ] **DATA-04**: Generated query builder supports cursor-based pagination with opaque base64 cursors
-- [ ] **DATA-05**: When TenantScoped is true, all generated queries automatically include tenant_id filtering from context
+- [x] **DATA-05**: When TenantScoped is true, all generated queries automatically include tenant_id filtering from context
 - [x] **DATA-06**: When SoftDelete is true, all queries exclude soft-deleted records by default
 - [x] **DATA-07**: Developer can use WithTrashed() and OnlyTrashed() to include/only-show soft-deleted records
 - [x] **DATA-08**: When a field is Unique on a SoftDelete resource, Atlas generates a partial unique index (WHERE deleted_at IS NULL)
@@ -116,10 +116,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Multi-Tenancy
 
-- [ ] **TENANT-01**: Developer can configure tenant resolution via header, subdomain, or path strategy
-- [ ] **TENANT-02**: When TenantScoped, all generated queries include tenant_id WHERE clause automatically
-- [ ] **TENANT-03**: Atlas generates row-level security (RLS) policies for tenant-scoped resources
-- [ ] **TENANT-04**: Test factories scope data to a test tenant
+- [x] **TENANT-01**: Developer can configure tenant resolution via header, subdomain, or path strategy
+- [x] **TENANT-02**: When TenantScoped, all generated queries include tenant_id WHERE clause automatically
+- [x] **TENANT-03**: Atlas generates row-level security (RLS) policies for tenant-scoped resources
+- [x] **TENANT-04**: Test factories scope data to a test tenant
 
 ### Background Jobs
 
@@ -251,7 +251,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-02 | Phase 3 | Pending |
 | DATA-03 | Phase 3 | Pending |
 | DATA-04 | Phase 3 | Pending |
-| DATA-05 | Phase 7 | Pending |
+| DATA-05 | Phase 7 | Complete |
 | DATA-06 | Phase 7 | Complete |
 | DATA-07 | Phase 7 | Complete |
 | DATA-08 | Phase 7 | Complete |
@@ -293,10 +293,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-04 | Phase 5 | Pending |
 | AUTH-05 | Phase 7 | Complete |
 | AUTH-06 | Phase 7 | Complete |
-| TENANT-01 | Phase 7 | Pending |
-| TENANT-02 | Phase 7 | Pending |
-| TENANT-03 | Phase 7 | Pending |
-| TENANT-04 | Phase 7 | Pending |
+| TENANT-01 | Phase 7 | Complete |
+| TENANT-02 | Phase 7 | Complete |
+| TENANT-03 | Phase 7 | Complete |
+| TENANT-04 | Phase 7 | Complete |
 | JOBS-01 | Phase 8 | Pending |
 | JOBS-02 | Phase 8 | Pending |
 | JOBS-03 | Phase 8 | Pending |

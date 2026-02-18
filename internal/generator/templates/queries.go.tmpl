@@ -92,3 +92,16 @@ func SortMod(sort models.{{$resource}}Sort) sm.QueryMod[*psql.SelectQuery] {
 	}
 	return orderBy.Asc()
 }
+{{- if .Options.SoftDelete}}
+
+// ActiveMod returns a query mod that excludes soft-deleted records.
+// Applied by default to List and Get queries.
+func (f {{$resource}}Filters) ActiveMod() sm.QueryMod[*psql.SelectQuery] {
+	return sm.Where(psql.Quote("deleted_at").IsNull())
+}
+
+// OnlyTrashedMod returns a query mod that shows only soft-deleted records.
+func (f {{$resource}}Filters) OnlyTrashedMod() sm.QueryMod[*psql.SelectQuery] {
+	return sm.Where(psql.Quote("deleted_at").IsNotNull())
+}
+{{- end}}

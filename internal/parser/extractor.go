@@ -167,6 +167,14 @@ func extractSchemaDefinition(fset *token.FileSet, call *ast.CallExpr, source []b
 			extractOption(funcName, &resource.Options)
 		} else if funcName == "Timestamps" {
 			resource.HasTimestamps = true
+		} else if isPermissionType(funcName) {
+			op, roles := extractPermission(fset, argCall, source, filename)
+			if op != "" && len(roles) > 0 {
+				if resource.Options.Permissions == nil {
+					resource.Options.Permissions = make(PermissionsIR)
+				}
+				resource.Options.Permissions[op] = roles
+			}
 		}
 
 		// Use rootCall if needed for future enhancements
@@ -339,6 +347,8 @@ func extractRelationship(fset *token.FileSet, call *ast.CallExpr, source []byte,
 			if val, ok := mod.Value.(string); ok {
 				rel.OnDelete = val
 			}
+		} else if mod.Type == "Eager" {
+			rel.Eager = true
 		}
 	}
 
@@ -405,8 +415,39 @@ func isModifierMethod(name string) bool {
 		"Index": true, "Default": true, "Immutable": true,
 		"Label": true, "Placeholder": true, "Help": true,
 		"OnDelete": true,
+		// Phase 7: advanced data feature modifiers
+		"Visibility": true, "Mutability": true, "Eager": true,
 	}
 	return modifiers[name]
+}
+
+// isPermissionType checks if a function name is a Permission constructor.
+func isPermissionType(name string) bool {
+	return name == "Permission"
+}
+
+// extractPermission extracts the operation and roles from a schema.Permission() call.
+func extractPermission(fset *token.FileSet, call *ast.CallExpr, source []byte, filename string) (string, []string) {
+	rootCall, _ := findRootCall(call)
+	if rootCall == nil || len(rootCall.Args) < 2 {
+		return "", nil
+	}
+	// First arg: operation string
+	opLit, ok := rootCall.Args[0].(*ast.BasicLit)
+	if !ok || opLit.Kind != token.STRING {
+		return "", nil
+	}
+	op, _ := strconv.Unquote(opLit.Value)
+	// Remaining args: role strings
+	var roles []string
+	for i := 1; i < len(rootCall.Args); i++ {
+		roleLit, ok := rootCall.Args[i].(*ast.BasicLit)
+		if ok && roleLit.Kind == token.STRING {
+			role, _ := strconv.Unquote(roleLit.Value)
+			roles = append(roles, role)
+		}
+	}
+	return op, roles
 }
 
 // extractLiteralValue extracts a value from a literal expression.

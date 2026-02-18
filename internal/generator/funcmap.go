@@ -46,6 +46,13 @@ func BuildFuncMap() template.FuncMap {
 		"join":                join,
 		// HTML generation helpers
 		"htmlInputType": htmlInputType,
+		// Phase 7: Advanced data feature helpers
+		"hasPermission":          hasPermission,
+		"permissionRoles":        permissionRoles,
+		"hasAnyVisibility":       hasAnyVisibility,
+		"hasAnyPermission":       hasAnyPermission,
+		"hasAuditableResource":   hasAuditableResource,
+		"hasTenantScopedResource": hasTenantScopedResource,
 	}
 }
 
@@ -458,6 +465,70 @@ func not(b bool) bool {
 // join joins a string slice with a separator.
 func join(sep string, s []string) string {
 	return strings.Join(s, sep)
+}
+
+// Phase 7: Advanced data feature helpers
+
+// hasPermission returns true if the resource options define the given operation.
+func hasPermission(opts parser.ResourceOptionsIR, operation string) bool {
+	if opts.Permissions == nil {
+		return false
+	}
+	_, ok := opts.Permissions[operation]
+	return ok
+}
+
+// permissionRoles returns a Go code literal of quoted role strings for the
+// given operation (e.g., `"admin", "editor"`). Returns an empty string if
+// the operation has no permissions defined.
+func permissionRoles(opts parser.ResourceOptionsIR, operation string) string {
+	if opts.Permissions == nil {
+		return ""
+	}
+	roles, ok := opts.Permissions[operation]
+	if !ok || len(roles) == 0 {
+		return ""
+	}
+	quoted := make([]string, len(roles))
+	for i, r := range roles {
+		quoted[i] = `"` + r + `"`
+	}
+	return strings.Join(quoted, ", ")
+}
+
+// hasAnyVisibility returns true if any field in the list has a Visibility modifier.
+func hasAnyVisibility(fields []parser.FieldIR) bool {
+	for _, f := range fields {
+		if hasModifier(f.Modifiers, "Visibility") {
+			return true
+		}
+	}
+	return false
+}
+
+// hasAnyPermission returns true if the resource options contain any permission rules.
+func hasAnyPermission(opts parser.ResourceOptionsIR) bool {
+	return len(opts.Permissions) > 0
+}
+
+// hasAuditableResource returns true if any resource in the slice has Auditable enabled.
+func hasAuditableResource(resources []parser.ResourceIR) bool {
+	for _, r := range resources {
+		if r.Options.Auditable {
+			return true
+		}
+	}
+	return false
+}
+
+// hasTenantScopedResource returns true if any resource in the slice has TenantScoped enabled.
+func hasTenantScopedResource(resources []parser.ResourceIR) bool {
+	for _, r := range resources {
+		if r.Options.TenantScoped {
+			return true
+		}
+	}
+	return false
 }
 
 // htmlInputType maps IR field type strings to HTML input type attributes.

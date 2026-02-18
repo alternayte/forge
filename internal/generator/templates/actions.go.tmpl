@@ -4,7 +4,11 @@ package actions
 
 import (
 	"context"
-{{- if or (hasAnyPermission .Options) (hasAnyVisibility .Fields)}}
+{{- if .Options.Auditable}}
+	"encoding/json"
+	"reflect"
+{{- end}}
+{{- if or (hasAnyPermission .Options) (hasAnyVisibility .Fields) (.Options.Auditable)}}
 	forgeauth "github.com/forge-framework/forge/internal/auth"
 {{- end}}
 
@@ -111,6 +115,10 @@ func (a *Default{{.Name}}Actions) Create(ctx context.Context, input models.{{.Na
 	// TODO: Execute Bob insert query
 	// This will be implemented when Bob query execution layer is complete.
 	// For now, return internal error to maintain compilable interface.
+{{- if .Options.Auditable}}
+	// Note: When Bob insert is wired, set created_by from forgeauth.UserFromContext(ctx)
+	// on the insert payload before executing the query (AUDIT-01).
+{{- end}}
 
 	return nil, errors.InternalError("Create not yet implemented")
 }
@@ -128,10 +136,28 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 		return nil, errors.NewValidationError(valErrs)
 	}
 
+{{- if .Options.Auditable}}
+	// Fetch before-state for audit diff (must happen before UPDATE) (AUDIT-02)
+	beforeItem, _ := a.Get(ctx, id)
+{{- end}}
+
 	// TODO: Execute Bob update query
 	// This will be implemented when Bob query execution layer is complete.
 	// For now, return not found error to maintain compilable interface.
 	_ = id
+
+	// TODO: Replace placeholder item below with the actual updated record from Bob query
+	var item *models.{{.Name}}
+
+{{- if .Options.Auditable}}
+	// Record update in audit log with JSONB diff (AUDIT-02)
+	// No-op updates produce empty diff — no audit entry (AUDIT-03)
+	if beforeItem != nil && item != nil {
+		if err := a.recordAudit(ctx, "update", id, beforeItem, item); err != nil {
+			_ = err // Log but don't fail the update
+		}
+	}
+{{- end}}
 
 	return nil, errors.NotFound("{{.Name}}", id.String())
 }
@@ -153,6 +179,10 @@ func (a *Default{{.Name}}Actions) Delete(ctx context.Context, id uuid.UUID) erro
 	if err != nil {
 		return errors.InternalError("failed to soft-delete {{.Name}}")
 	}
+{{- if .Options.Auditable}}
+	// Record soft-delete in audit log (AUDIT-02)
+	a.recordAudit(ctx, "delete", id, nil, map[string]any{"deleted_at": "now"}) //nolint:errcheck
+{{- end}}
 	return nil
 {{- else}}
 	// Hard delete
@@ -195,6 +225,76 @@ func checkPermission(ctx context.Context, allowedRoles ...string) error {
 		}
 	}
 	return errors.Forbidden("insufficient permissions")
+}
+{{- end}}
+{{- if .Options.Auditable}}
+
+// computeJSONDiff compares two map representations and returns only changed fields.
+// Each changed field has "before" and "after" values. Returns nil if no changes.
+func computeJSONDiff(before, after map[string]any) map[string]any {
+	diff := make(map[string]any)
+	for k, afterVal := range after {
+		beforeVal, exists := before[k]
+		if !exists {
+			diff[k] = map[string]any{"before": nil, "after": afterVal}
+		} else if !reflect.DeepEqual(beforeVal, afterVal) {
+			diff[k] = map[string]any{"before": beforeVal, "after": afterVal}
+		}
+	}
+	// Check for deleted keys (in before but not in after)
+	for k, beforeVal := range before {
+		if _, exists := after[k]; !exists {
+			diff[k] = map[string]any{"before": beforeVal, "after": nil}
+		}
+	}
+	if len(diff) == 0 {
+		return nil
+	}
+	return diff
+}
+
+// recordAudit records a change to the audit_logs table.
+// before is nil for creates (all fields recorded as new values).
+// If before and after are identical, no entry is recorded (AUDIT-03: no-op updates).
+func (a *Default{{.Name}}Actions) recordAudit(ctx context.Context, op string, resourceID uuid.UUID, before, after any) error {
+	var beforeMap, afterMap map[string]any
+
+	if before != nil {
+		b, _ := json.Marshal(before)
+		json.Unmarshal(b, &beforeMap) //nolint:errcheck
+	}
+	a2, _ := json.Marshal(after)
+	json.Unmarshal(a2, &afterMap) //nolint:errcheck
+
+	diff := computeJSONDiff(beforeMap, afterMap)
+	if diff == nil && op != "create" {
+		return nil // No changes — skip audit entry (AUDIT-03)
+	}
+
+	// For creates, record all fields as the diff
+	if op == "create" && diff == nil {
+		diff = afterMap
+	}
+
+	userID := forgeauth.UserFromContext(ctx)
+	diffJSON, _ := json.Marshal(diff)
+
+	var userIDPtr *uuid.UUID
+	if userID != (uuid.UUID{}) {
+		userIDPtr = &userID
+	}
+
+	_, err := a.DB.Exec(ctx,
+		`INSERT INTO audit_logs (resource_type, resource_id, operation, changed_fields, created_by)
+		 VALUES ($1, $2, $3, $4, $5)`,
+		"{{snake .Name}}", resourceID, op, diffJSON, userIDPtr,
+	)
+	return err
+}
+
+// GetDB returns the database connection for direct queries (e.g., audit log).
+func (a *Default{{.Name}}Actions) GetDB() DB {
+	return a.DB
 }
 {{- end}}
 {{- if hasAnyVisibility .Fields}}

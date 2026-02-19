@@ -1,12 +1,12 @@
 package {{.ExampleResource}}
 
-import "{{.Module}}/gen/schema"
+import "github.com/alternayte/forge/schema"
 
 // {{.ExampleResourceTitle}} resource definition
 var {{.ExampleResourceTitle}} = schema.Define("{{.ExampleResourceTitle}}",
 	schema.UUID("ID").PrimaryKey(),
-	schema.String("Name").Required().MaxLen(200).Label("Name").Placeholder("Enter name"),
-	schema.Text("Description").Help("Detailed description"),
-	schema.Bool("Active").Default(true),
+	schema.String("Title").Required().MaxLen(200).Label("Title").Placeholder("Enter title"),
+	schema.Text("Body").Label("Body").Help("Post content"),
+	schema.String("Status").Required().Default("draft"),
 	schema.Timestamps(),
 )

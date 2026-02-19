@@ -18,23 +18,7 @@ func run() error {
 	fmt.Println("Next steps:")
 	fmt.Println("  1. Define resources in resources/*/schema.go")
 	fmt.Println("  2. Run 'forge generate' to generate code")
-	fmt.Println("  3. Wire up your server here in main.go")
-	fmt.Println()
-	fmt.Println("After generating, your API routes will be in gen/api/")
-	fmt.Println("and HTML routes in gen/html/. See the README for details.")
-
-	// TODO: after running 'forge generate', wire up your server:
-	//
-	//   import (
-	//       "{{.Module}}/gen/api"
-	//       "{{.Module}}/gen/html"
-	//       "github.com/alternayte/forge/pkg/forge"
-	//   )
-	//
-	//   server := forge.NewServer(forge.Config{...})
-	//   api.RegisterAllRoutes(server.API())
-	//   html.RegisterAllHTMLRoutes(server.Router())
-	//   return server.Run()
+	fmt.Println("  3. Run 'forge dev' to start developing")
 
 	return nil
 }

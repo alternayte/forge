@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/forge-framework/forge/internal/parser"
+	"github.com/alternayte/forge/internal/parser"
 )
 
 func TestGenerateValidation(t *testing.T) {

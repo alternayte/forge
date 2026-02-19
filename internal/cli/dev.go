@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/forge-framework/forge/internal/config"
-	"github.com/forge-framework/forge/internal/ui"
-	"github.com/forge-framework/forge/internal/watcher"
+	"github.com/alternayte/forge/internal/config"
+	"github.com/alternayte/forge/internal/ui"
+	"github.com/alternayte/forge/internal/watcher"
 	"github.com/spf13/cobra"
 )
 

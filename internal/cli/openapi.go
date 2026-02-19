@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/forge-framework/forge/internal/config"
-	"github.com/forge-framework/forge/internal/parser"
+	"github.com/alternayte/forge/internal/config"
+	"github.com/alternayte/forge/internal/parser"
 	"github.com/spf13/cobra"
 
 	"path/filepath"

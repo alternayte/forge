@@ -3,7 +3,7 @@ package generator
 import (
 	"path/filepath"
 
-	"github.com/forge-framework/forge/internal/parser"
+	"github.com/alternayte/forge/internal/parser"
 )
 
 // GenerateActions generates action interfaces and default implementations for all resources.

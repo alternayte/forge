@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/forge-framework/forge/internal/ui"
+	"github.com/alternayte/forge/internal/ui"
 )
 
 // destructivePatterns contains regex patterns that match destructive SQL operations.

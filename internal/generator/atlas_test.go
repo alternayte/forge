@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/forge-framework/forge/internal/parser"
+	"github.com/alternayte/forge/internal/parser"
 )
 
 // TestGenerateAtlasSchema_ProductTable tests end-to-end Atlas schema generation.

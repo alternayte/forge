@@ -3,14 +3,14 @@ package parser
 import (
 	"testing"
 
-	"github.com/forge-framework/forge/internal/errors"
+	"github.com/alternayte/forge/internal/errors"
 )
 
 // TestParseSimpleResource tests parsing a basic resource with string fields
 func TestParseSimpleResource(t *testing.T) {
 	source := `package resources
 
-import "github.com/forge-framework/forge/internal/schema"
+import "github.com/alternayte/forge/schema"
 
 var Post = schema.Define("Post",
 	schema.String("Title").Required(),
@@ -74,7 +74,7 @@ var Post = schema.Define("Post",
 func TestParseAllFieldTypes(t *testing.T) {
 	source := `package resources
 
-import "github.com/forge-framework/forge/internal/schema"
+import "github.com/alternayte/forge/schema"
 
 var AllTypes = schema.Define("AllTypes",
 	schema.UUID("ID"),
@@ -127,7 +127,7 @@ var AllTypes = schema.Define("AllTypes",
 func TestParseFieldModifiersWithValues(t *testing.T) {
 	source := `package resources
 
-import "github.com/forge-framework/forge/internal/schema"
+import "github.com/alternayte/forge/schema"
 
 var Article = schema.Define("Article",
 	schema.String("Title").Required().MaxLen(200).MinLen(3).Default("Untitled").Label("Title").Placeholder("Enter title"),
@@ -182,7 +182,7 @@ var Article = schema.Define("Article",
 func TestParseRelationships(t *testing.T) {
 	source := `package resources
 
-import "github.com/forge-framework/forge/internal/schema"
+import "github.com/alternayte/forge/schema"
 
 var Post = schema.Define("Post",
 	schema.String("Title"),
@@ -225,7 +225,7 @@ var Post = schema.Define("Post",
 func TestParseResourceOptions(t *testing.T) {
 	source := `package resources
 
-import "github.com/forge-framework/forge/internal/schema"
+import "github.com/alternayte/forge/schema"
 
 var Post = schema.Define("Post",
 	schema.SoftDelete(),
@@ -262,7 +262,7 @@ var Post = schema.Define("Post",
 func TestParseEnumWithValues(t *testing.T) {
 	source := `package resources
 
-import "github.com/forge-framework/forge/internal/schema"
+import "github.com/alternayte/forge/schema"
 
 var Post = schema.Define("Post",
 	schema.Enum("Status", "draft", "published", "archived").Default("draft"),
@@ -312,7 +312,7 @@ var Post = schema.Define("Post",
 func TestRejectDynamicValues(t *testing.T) {
 	source := `package resources
 
-import "github.com/forge-framework/forge/internal/schema"
+import "github.com/alternayte/forge/schema"
 
 var maxLen = 200
 
@@ -352,7 +352,7 @@ var Post = schema.Define("Post",
 func TestCollectMultipleErrors(t *testing.T) {
 	source := `package resources
 
-import "github.com/forge-framework/forge/internal/schema"
+import "github.com/alternayte/forge/schema"
 
 var maxLen = 200
 var minLen = 3
@@ -406,7 +406,7 @@ func SomeHelper() {
 func TestParseAllRelationshipTypes(t *testing.T) {
 	source := `package resources
 
-import "github.com/forge-framework/forge/internal/schema"
+import "github.com/alternayte/forge/schema"
 
 var Post = schema.Define("Post",
 	schema.BelongsTo("User", "users"),

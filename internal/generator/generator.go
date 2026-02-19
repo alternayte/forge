@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/forge-framework/forge/internal/parser"
+	"github.com/alternayte/forge/internal/parser"
 )
 
 // GenerateConfig holds configuration for the generator.

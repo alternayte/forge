@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/forge-framework/forge/internal/config"
-	"github.com/forge-framework/forge/internal/ui"
+	"github.com/alternayte/forge/internal/config"
+	"github.com/alternayte/forge/internal/ui"
 	"github.com/spf13/cobra"
 )
 

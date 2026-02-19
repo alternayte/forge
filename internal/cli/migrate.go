@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/forge-framework/forge/internal/config"
-	"github.com/forge-framework/forge/internal/migrate"
-	"github.com/forge-framework/forge/internal/toolsync"
-	"github.com/forge-framework/forge/internal/ui"
+	"github.com/alternayte/forge/internal/config"
+	"github.com/alternayte/forge/internal/migrate"
+	"github.com/alternayte/forge/internal/toolsync"
+	"github.com/alternayte/forge/internal/ui"
 	"github.com/spf13/cobra"
 )
 

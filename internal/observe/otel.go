@@ -15,7 +15,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 
 	"github.com/exaring/otelpgx"
-	"github.com/forge-framework/forge/internal/config"
+	"github.com/alternayte/forge/internal/config"
 )
 
 // Setup bootstraps the OpenTelemetry SDK, setting the global TracerProvider

@@ -8,9 +8,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
-	apimiddleware "github.com/forge-framework/forge/internal/api/middleware"
-	"github.com/forge-framework/forge/internal/auth"
-	"github.com/forge-framework/forge/internal/config"
+	apimiddleware "github.com/alternayte/forge/internal/api/middleware"
+	"github.com/alternayte/forge/internal/auth"
+	"github.com/alternayte/forge/internal/config"
 )
 
 // SetupAPI creates a Huma API instance on the provided Chi router, wires all middleware in

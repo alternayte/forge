@@ -5,7 +5,7 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/forge-framework/forge/internal/errors"
+	"github.com/alternayte/forge/internal/errors"
 )
 
 // validateLiteralValues checks that all arguments are literal values or schema.X selectors.

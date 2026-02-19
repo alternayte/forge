@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/forge-framework/forge/internal/parser"
+	"github.com/alternayte/forge/internal/parser"
 )
 
 // TestGenerateModels_ProductSchema tests end-to-end model generation.

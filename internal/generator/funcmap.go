@@ -6,7 +6,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/forge-framework/forge/internal/parser"
+	"github.com/alternayte/forge/internal/parser"
 )
 
 // BuildFuncMap returns a FuncMap with all template helper functions.

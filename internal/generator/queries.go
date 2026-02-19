@@ -3,7 +3,7 @@ package generator
 import (
 	"path/filepath"
 
-	"github.com/forge-framework/forge/internal/parser"
+	"github.com/alternayte/forge/internal/parser"
 )
 
 // GenerateQueries generates query builder mod functions for all resources.

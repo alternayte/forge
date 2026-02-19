@@ -5,7 +5,7 @@ import (
 	"go/token"
 	"strconv"
 
-	"github.com/forge-framework/forge/internal/errors"
+	"github.com/alternayte/forge/internal/errors"
 )
 
 // extractResources walks the AST and extracts all schema.Define() calls.

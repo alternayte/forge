@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/rs/cors"
-	"github.com/forge-framework/forge/internal/config"
+	"github.com/alternayte/forge/internal/config"
 )
 
 // CORSMiddleware returns an HTTP middleware that applies CORS headers based on

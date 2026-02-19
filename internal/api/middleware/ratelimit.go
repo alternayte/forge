@@ -7,7 +7,7 @@ import (
 
 	"github.com/sethvargo/go-limiter/httplimit"
 	"github.com/sethvargo/go-limiter/memorystore"
-	"github.com/forge-framework/forge/internal/config"
+	"github.com/alternayte/forge/internal/config"
 )
 
 // RateLimitMiddleware returns an HTTP middleware that enforces per-IP token

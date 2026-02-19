@@ -7,7 +7,7 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/forge-framework/forge/internal/parser"
+	"github.com/alternayte/forge/internal/parser"
 )
 
 // TestScaffoldTemplates verifies the three scaffold templ templates render

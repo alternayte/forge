@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/forge-framework/forge/internal/config"
-	"github.com/forge-framework/forge/internal/toolsync"
-	"github.com/forge-framework/forge/internal/ui"
+	"github.com/alternayte/forge/internal/config"
+	"github.com/alternayte/forge/internal/toolsync"
+	"github.com/alternayte/forge/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -202,7 +202,7 @@ func buildLdflags(projectRoot string) (string, error) {
 	// Get build date in RFC3339 format
 	date := time.Now().UTC().Format(time.RFC3339)
 
-	const pkg = "github.com/forge-framework/forge/internal/cli"
+	const pkg = "github.com/alternayte/forge/internal/cli"
 
 	ldflags := fmt.Sprintf(
 		"-s -w -X %s.Version=%s -X %s.Commit=%s -X %s.Date=%s",

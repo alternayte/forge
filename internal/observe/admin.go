@@ -9,8 +9,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/forge-framework/forge/internal/cli"
-	"github.com/forge-framework/forge/internal/config"
+	"github.com/alternayte/forge/internal/cli"
+	"github.com/alternayte/forge/internal/config"
 )
 
 // StartAdminServer creates and starts a dedicated admin/ops HTTP server on the

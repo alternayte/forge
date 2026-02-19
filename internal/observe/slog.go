@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/forge-framework/forge/internal/config"
+	"github.com/alternayte/forge/internal/config"
 )
 
 // NewHandler returns an environment-aware slog handler. When cfg.LogFormat is

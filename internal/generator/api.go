@@ -3,7 +3,7 @@ package generator
 import (
 	"path/filepath"
 
-	"github.com/forge-framework/forge/internal/parser"
+	"github.com/alternayte/forge/internal/parser"
 )
 
 // GenerateAPI generates Huma API Input/Output structs and route registration functions for all resources.

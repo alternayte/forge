@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/forge-framework/forge/internal/scaffold"
-	"github.com/forge-framework/forge/internal/ui"
+	"github.com/alternayte/forge/internal/scaffold"
+	"github.com/alternayte/forge/internal/ui"
 	"github.com/spf13/cobra"
 )
 

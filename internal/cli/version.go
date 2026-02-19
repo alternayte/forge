@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/forge-framework/forge/internal/ui"
+	"github.com/alternayte/forge/internal/ui"
 	"github.com/spf13/cobra"
 )
 

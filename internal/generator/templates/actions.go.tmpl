@@ -9,7 +9,7 @@ import (
 	"reflect"
 {{- end}}
 {{- if or (hasAnyPermission .Options) (hasAnyVisibility .Fields) (.Options.Auditable) (hasHooks .Options)}}
-	forgeauth "github.com/forge-framework/forge/internal/auth"
+	forgeauth "github.com/alternayte/forge/internal/auth"
 {{- end}}
 {{- if hasHooks .Options}}
 	"github.com/jackc/pgx/v5"

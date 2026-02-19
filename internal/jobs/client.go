@@ -12,7 +12,7 @@ import (
 	"github.com/riverqueue/river/rivertype"
 	"github.com/riverqueue/rivercontrib/otelriver"
 
-	"github.com/forge-framework/forge/internal/config"
+	"github.com/alternayte/forge/internal/config"
 )
 
 // NewRiverClient creates a River client configured from forge.toml [jobs] settings.

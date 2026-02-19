@@ -1,4 +1,4 @@
-module github.com/forge-framework/forge
+module github.com/alternayte/forge
 
 go 1.25.6
 

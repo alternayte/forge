@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/forge-framework/forge/internal/config"
-	"github.com/forge-framework/forge/internal/generator"
-	"github.com/forge-framework/forge/internal/parser"
-	"github.com/forge-framework/forge/internal/ui"
+	"github.com/alternayte/forge/internal/config"
+	"github.com/alternayte/forge/internal/generator"
+	"github.com/alternayte/forge/internal/parser"
+	"github.com/alternayte/forge/internal/ui"
 )
 
 // DevServer orchestrates the development workflow: watch + parse + generate.

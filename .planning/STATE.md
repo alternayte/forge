@@ -203,6 +203,9 @@ Recent decisions affecting current work:
 - [Phase 08-04]: Inline Args structs in generated actions.go (not in resources/ scaffold) avoid import cycles — generated gen/actions cannot import user-scaffolded resources/{name}/
 - [Phase 08-04]: if result == nil guard before InsertTx calls makes transactional job enqueueing structurally present and vet-clean before Bob queries are wired
 - [Phase 08-04]: TenantFromContext returns (uuid.UUID, bool); blank identifier discards the bool — tenant ID defaults to uuid.Nil when context missing
+- [Quick-1]: InferModule returns projectName as-is — user owns module path, forge developer's git config is irrelevant
+- [Quick-1]: main.go scaffold uses run() error pattern with commented server wiring example for guidance post-forge-generate
+- [Quick-1]: forge dev Short/Long updated to remove "development server" confusion; explicitly states it does NOT run the app
 
 ### Pending Todos
 
@@ -215,5 +218,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 08-05-PLAN.md (forge build + forge deploy CLI commands, embed.go template)
+Stopped at: Completed quick-1 (forge init UX fixes: module path, main.go scaffold, forge dev help text)
 Resume file: N/A — all phases complete

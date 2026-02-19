@@ -19,6 +19,7 @@ type Config struct {
 	SSE      SSEConfig      `toml:"sse"`
 	Observe  ObserveConfig  `toml:"telemetry"`
 	Admin    AdminConfig    `toml:"admin"`
+	API      APIConfig      `toml:"api"`
 }
 
 // ProjectConfig holds project-level settings
@@ -216,5 +217,6 @@ func Default() Config {
 		Admin: AdminConfig{
 			Port: 9090,
 		},
+		API: DefaultAPIConfig(),
 	}
 }

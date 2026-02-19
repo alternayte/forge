@@ -33,6 +33,9 @@ func init() {
 	openapiCmd := newOpenapiCmd()
 	openapiCmd.AddCommand(newOpenapiExportCmd())
 	rootCmd.AddCommand(openapiCmd)
+
+	rootCmd.AddCommand(newBuildCmd())
+	rootCmd.AddCommand(newDeployCmd())
 }
 
 // Execute runs the root command

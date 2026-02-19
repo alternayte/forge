@@ -9,7 +9,7 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
 	apimiddleware "github.com/alternayte/forge/internal/api/middleware"
-	"github.com/alternayte/forge/internal/auth"
+	"github.com/alternayte/forge/forge/auth"
 	"github.com/alternayte/forge/internal/config"
 )
 

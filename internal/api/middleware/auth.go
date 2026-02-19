@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/alternayte/forge/internal/auth"
+	"github.com/alternayte/forge/forge/auth"
 )
 
 // contextKey is a typed key for context values set by auth middleware.

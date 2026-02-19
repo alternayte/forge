@@ -4,7 +4,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 
-	"github.com/alternayte/forge/internal/auth"
+	"github.com/alternayte/forge/forge/auth"
 )
 
 // HTMLServerConfig holds the dependencies required to set up HTML (browser-facing)

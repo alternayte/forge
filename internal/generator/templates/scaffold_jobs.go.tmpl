@@ -1,0 +1,46 @@
+package {{snake .Resource.Name}}
+
+import (
+	"context"
+
+	"github.com/riverqueue/river"
+	forgeauth "github.com/forge-framework/forge/internal/auth"
+	"{{.ProjectModule}}/gen/actions"
+)
+{{range .Resource.Options.Hooks.AfterCreate}}
+// {{pascal .Kind}}Worker processes {{.Kind}} jobs enqueued after a {{$.Resource.Name}} is created.
+// Add your dependencies (DB pool, mailer, etc.) as fields on this struct.
+type {{pascal .Kind}}Worker struct {
+	river.WorkerDefaults[actions.{{pascal .Kind}}Args]
+}
+
+// Work executes the {{.Kind}} job.
+func (w *{{pascal .Kind}}Worker) Work(ctx context.Context, job *river.Job[actions.{{pascal .Kind}}Args]) error {
+	// Restore tenant context from job args for scoped database queries (JOBS-03).
+	ctx = forgeauth.WithTenant(ctx, job.Args.TenantID)
+
+	// TODO: Add job logic here.
+	// job.Args.ResourceID holds the {{$.Resource.Name}} ID.
+	// job.Args.TenantID holds the tenant for multi-tenant queries.
+	_ = ctx
+	return nil
+}
+{{end}}{{range .Resource.Options.Hooks.AfterUpdate}}
+// {{pascal .Kind}}Worker processes {{.Kind}} jobs enqueued after a {{$.Resource.Name}} is updated.
+// Add your dependencies (DB pool, mailer, etc.) as fields on this struct.
+type {{pascal .Kind}}Worker struct {
+	river.WorkerDefaults[actions.{{pascal .Kind}}Args]
+}
+
+// Work executes the {{.Kind}} job.
+func (w *{{pascal .Kind}}Worker) Work(ctx context.Context, job *river.Job[actions.{{pascal .Kind}}Args]) error {
+	// Restore tenant context from job args for scoped database queries (JOBS-03).
+	ctx = forgeauth.WithTenant(ctx, job.Args.TenantID)
+
+	// TODO: Add job logic here.
+	// job.Args.ResourceID holds the {{$.Resource.Name}} ID.
+	// job.Args.TenantID holds the tenant for multi-tenant queries.
+	_ = ctx
+	return nil
+}
+{{end}}

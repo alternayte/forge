@@ -38,8 +38,8 @@ type TestDBConfig struct {
 // using runtime.Caller so they work regardless of which package calls NewTestDB.
 func DefaultTestDBConfig() TestDBConfig {
 	_, filename, _, _ := runtime.Caller(0)
-	// filename is internal/forgetest/db.go; repo root is two levels up
-	repoRoot := filepath.Join(filepath.Dir(filename), "../..")
+	// filename is forge/forgetest/db.go; repo root is three levels up
+	repoRoot := filepath.Join(filepath.Dir(filename), "../../..")
 	repoRoot = filepath.Clean(repoRoot)
 
 	return TestDBConfig{

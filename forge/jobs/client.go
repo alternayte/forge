@@ -11,14 +11,20 @@ import (
 	"github.com/riverqueue/river/rivermigrate"
 	"github.com/riverqueue/river/rivertype"
 	"github.com/riverqueue/rivercontrib/otelriver"
-
-	"github.com/alternayte/forge/internal/config"
 )
 
-// NewRiverClient creates a River client configured from forge.toml [jobs] settings.
+// Config holds background job processing settings.
+// It is the public equivalent of the internal config.JobsConfig type.
+// Callers construct this from their application config and pass it to NewRiverClient.
+type Config struct {
+	Enabled bool
+	Queues  map[string]int // queue_name -> max_workers
+}
+
+// NewRiverClient creates a River client configured from the provided Config.
 // Workers is the bundle of registered job workers — may be nil for enqueue-only clients.
-func NewRiverClient(pool *pgxpool.Pool, cfg config.JobsConfig, workers *river.Workers) (*river.Client[pgx.Tx], error) {
-	// Build queue config from forge.toml [jobs.queues] section.
+func NewRiverClient(pool *pgxpool.Pool, cfg Config, workers *river.Workers) (*river.Client[pgx.Tx], error) {
+	// Build queue config from cfg.Queues section.
 	queues := make(map[string]river.QueueConfig, len(cfg.Queues)+1)
 	for name, maxWorkers := range cfg.Queues {
 		queues[name] = river.QueueConfig{MaxWorkers: maxWorkers}

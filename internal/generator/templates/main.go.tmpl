@@ -1,0 +1,36 @@
+package main
+
+import (
+	"log"
+
+	"github.com/alternayte/forge/forge"
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/go-chi/chi/v5"
+
+	genactions "{{.ProjectModule}}/gen/actions"
+	genapi "{{.ProjectModule}}/gen/api"
+	genhtml "{{.ProjectModule}}/gen/html"
+	genmiddleware "{{.ProjectModule}}/gen/middleware"
+)
+
+func main() {
+	cfg, err := forge.LoadConfig("forge.toml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Build the actions registry with default implementations.
+	// Override individual resources by calling registry.Register("resource", customActions).
+	registry := genactions.NewRegistry()
+
+	app := forge.New(cfg).
+		UseRecovery(genmiddleware.Recovery).
+		RegisterAPIRoutes(func(api huma.API) {
+			genapi.RegisterAllRoutes(api, registry)
+		}).
+		RegisterHTMLRoutes(func(r chi.Router) {
+			genhtml.RegisterAllHTMLRoutes(r)
+		})
+
+	log.Fatal(app.Listen(cfg.ServerAddr()))
+}

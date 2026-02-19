@@ -83,6 +83,13 @@ func Generate(resources []parser.ResourceIR, cfg GenerateConfig) error {
 		return err
 	}
 
+	// Scaffold main.go in project root if it doesn't already use forge.App
+	if cfg.ProjectRoot != "" {
+		if err := GenerateMain(cfg.ProjectRoot, cfg.ProjectModule); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

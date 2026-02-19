@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Schema is the single source of truth — define a resource once and everything is generated automatically with zero manual sync.
-**Current focus:** Phase 2: Code Generation Engine
+**Current focus:** Phase 9: Public API Surface & End-to-End Flow
 
 ## Current Position
 
-Phase: 8 of 8 (Background Jobs & Production Readiness)
-Plan: 5 of 5 in current phase
-Status: Complete
-Last activity: 2026-02-19 - Completed quick task 1: Fix forge init UX: module path, main.go scaffold, forge dev help
+Phase: 9 of 9 (Public API Surface & End-to-End Flow)
+Plan: 1 of 5 in current phase
+Status: In Progress
+Last activity: 2026-02-19 - Completed Phase 09 Plan 01: Module rename to github.com/alternayte/forge, schema/ moved to repo root
 
 Progress: [██████████] 100%
 
@@ -63,6 +63,7 @@ Progress: [██████████] 100%
 | Phase 08 P01 | 5 | 2 tasks | 6 files |
 | Phase 08 P04 | 6m | 2 tasks | 7 files |
 | Phase 08 P05 | 2 | 2 tasks | 4 files |
+| Phase 09 P01 | 2 | 2 tasks | 72 files |
 
 ## Accumulated Context
 
@@ -206,6 +207,8 @@ Recent decisions affecting current work:
 - [Quick-1]: InferModule returns projectName as-is — user owns module path, forge developer's git config is irrelevant
 - [Quick-1]: main.go scaffold uses run() error pattern with commented server wiring example for guidance post-forge-generate
 - [Quick-1]: forge dev Short/Long updated to remove "development server" confusion; explicitly states it does NOT run the app
+- [Phase 09]: [Phase 09-01]: schema/ at repo root (not internal/) — public API surface users import directly
+- [Phase 09]: [Phase 09-01]: .gitignore uses forge + !/forge/ pattern — excludes binary, allows package directory
 
 ### Pending Todos
 
@@ -228,5 +231,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Phase 9 context gathered
+Stopped at: Completed 09-01-PLAN.md
 Resume file: .planning/phases/09-public-api-surface-end-to-end-flow/09-CONTEXT.md

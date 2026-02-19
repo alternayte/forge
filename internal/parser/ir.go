@@ -43,6 +43,20 @@ type RelationshipIR struct {
 // Example: {"list": ["admin", "editor"], "delete": ["admin"]}
 type PermissionsIR map[string][]string
 
+// JobRefIR represents a River job reference extracted from a schema.JobRef literal.
+// Kind is the job worker kind string; Queue is the River queue name.
+type JobRefIR struct {
+	Kind  string // River job worker kind (e.g., "notify_new_product")
+	Queue string // River queue name (e.g., "notifications")
+}
+
+// HooksIR represents lifecycle job enqueueing declarations for a resource.
+// AfterCreate jobs are enqueued transactionally on CREATE; AfterUpdate on UPDATE.
+type HooksIR struct {
+	AfterCreate []JobRefIR // Jobs to enqueue after resource creation
+	AfterUpdate []JobRefIR // Jobs to enqueue after resource update
+}
+
 // ResourceOptionsIR represents resource-level options.
 type ResourceOptionsIR struct {
 	SoftDelete   bool          // Enable soft delete
@@ -50,6 +64,7 @@ type ResourceOptionsIR struct {
 	TenantScoped bool          // Enable multi-tenancy scoping
 	Searchable   bool          // Enable full-text search
 	Permissions  PermissionsIR // Role-based permission rules per operation
+	Hooks        HooksIR       // Lifecycle River job enqueueing declarations
 }
 
 // ParseResult represents the output of parsing a directory of schema files.

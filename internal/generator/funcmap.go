@@ -53,6 +53,9 @@ func BuildFuncMap() template.FuncMap {
 		"hasAnyPermission":       hasAnyPermission,
 		"hasAuditableResource":   hasAuditableResource,
 		"hasTenantScopedResource": hasTenantScopedResource,
+		// Phase 8: Background jobs helpers
+		"hasHooks": hasHooks,
+		"pascal":   pascal,
 	}
 }
 
@@ -529,6 +532,28 @@ func hasTenantScopedResource(resources []parser.ResourceIR) bool {
 		}
 	}
 	return false
+}
+
+// Phase 8: Background jobs helpers
+
+// hasHooks returns true when the resource options declare at least one lifecycle job.
+// Used in templates to conditionally include River job enqueueing code.
+func hasHooks(opts parser.ResourceOptionsIR) bool {
+	return len(opts.Hooks.AfterCreate) > 0 || len(opts.Hooks.AfterUpdate) > 0
+}
+
+// pascal converts a snake_case string to PascalCase.
+// For example, "notify_new_product" becomes "NotifyNewProduct".
+// This differs from camel(), which only uppercases the first character and
+// does NOT split on underscores.
+func pascal(s string) string {
+	parts := strings.Split(s, "_")
+	for i, p := range parts {
+		if len(p) > 0 {
+			parts[i] = strings.ToUpper(p[:1]) + p[1:]
+		}
+	}
+	return strings.Join(parts, "")
 }
 
 // htmlInputType maps IR field type strings to HTML input type attributes.

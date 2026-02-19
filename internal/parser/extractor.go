@@ -175,6 +175,11 @@ func extractSchemaDefinition(fset *token.FileSet, call *ast.CallExpr, source []b
 				}
 				resource.Options.Permissions[op] = roles
 			}
+		} else if isHooksType(funcName) {
+			hooks, err := extractHooks(argCall)
+			if err == nil {
+				resource.Options.Hooks = hooks
+			}
 		}
 
 		// Use rootCall if needed for future enhancements
@@ -424,6 +429,98 @@ func isModifierMethod(name string) bool {
 // isPermissionType checks if a function name is a Permission constructor.
 func isPermissionType(name string) bool {
 	return name == "Permission"
+}
+
+// isHooksType checks if a function name is a WithHooks constructor.
+func isHooksType(name string) bool {
+	return name == "WithHooks"
+}
+
+// extractHooks extracts a HooksIR from a schema.WithHooks() call expression.
+//
+// AST structure of schema.WithHooks(schema.Hooks{AfterCreate: []schema.JobRef{{Kind: "x", Queue: "y"}}}):
+//   - CallExpr with Fun = SelectorExpr(schema.WithHooks)
+//   - Args[0] = CompositeLit (type schema.Hooks)
+//     - Elts: KeyValueExpr (Key="AfterCreate"|"AfterUpdate", Value=CompositeLit of []schema.JobRef)
+//       - Elts: CompositeLit (type schema.JobRef) with KeyValueExpr for Kind and Queue
+func extractHooks(callExpr *ast.CallExpr) (HooksIR, error) {
+	var hooks HooksIR
+
+	if len(callExpr.Args) == 0 {
+		return hooks, nil
+	}
+
+	// Args[0] should be a composite literal of type schema.Hooks
+	hooksLit, ok := callExpr.Args[0].(*ast.CompositeLit)
+	if !ok {
+		return hooks, nil
+	}
+
+	// Iterate over fields of the schema.Hooks composite literal
+	for _, elt := range hooksLit.Elts {
+		kv, ok := elt.(*ast.KeyValueExpr)
+		if !ok {
+			continue
+		}
+
+		// Key must be an identifier (AfterCreate or AfterUpdate)
+		keyIdent, ok := kv.Key.(*ast.Ident)
+		if !ok {
+			continue
+		}
+		fieldName := keyIdent.Name
+
+		// Value is a composite literal of []schema.JobRef
+		jobRefSlice, ok := kv.Value.(*ast.CompositeLit)
+		if !ok {
+			continue
+		}
+
+		var jobRefs []JobRefIR
+		for _, jobElt := range jobRefSlice.Elts {
+			// Each element is a composite literal for a schema.JobRef struct
+			jobLit, ok := jobElt.(*ast.CompositeLit)
+			if !ok {
+				continue
+			}
+
+			var ref JobRefIR
+			for _, jobField := range jobLit.Elts {
+				jobKV, ok := jobField.(*ast.KeyValueExpr)
+				if !ok {
+					continue
+				}
+				fieldKey, ok := jobKV.Key.(*ast.Ident)
+				if !ok {
+					continue
+				}
+				valLit, ok := jobKV.Value.(*ast.BasicLit)
+				if !ok || valLit.Kind != token.STRING {
+					continue
+				}
+				val, err := strconv.Unquote(valLit.Value)
+				if err != nil {
+					continue
+				}
+				switch fieldKey.Name {
+				case "Kind":
+					ref.Kind = val
+				case "Queue":
+					ref.Queue = val
+				}
+			}
+			jobRefs = append(jobRefs, ref)
+		}
+
+		switch fieldName {
+		case "AfterCreate":
+			hooks.AfterCreate = jobRefs
+		case "AfterUpdate":
+			hooks.AfterUpdate = jobRefs
+		}
+	}
+
+	return hooks, nil
 }
 
 // extractPermission extracts the operation and roles from a schema.Permission() call.

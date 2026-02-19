@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 9 of 9 (Public API Surface & End-to-End Flow)
-Plan: 2 of 5 in current phase
+Plan: 3 of 5 in current phase
 Status: In Progress
-Last activity: 2026-02-19 - Completed Phase 09 Plan 02: Moved auth, sse, notify, jobs, forgetest to forge/ public packages
+Last activity: 2026-02-19 - Completed Phase 09 Plan 03: Created forge.App builder, Config loader, Error, Transaction public API
 
 Progress: [██████████] 100%
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100%
 | Phase 08 P05 | 2 | 2 tasks | 4 files |
 | Phase 09 P01 | 2 | 2 tasks | 72 files |
 | Phase 09 P02 | 3 | 2 tasks | 21 files |
+| Phase 09 P03 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -213,6 +214,10 @@ Recent decisions affecting current work:
 - [Phase 09]: forge/jobs has own Config struct (Enabled bool, Queues map[string]int) — public API cannot expose internal/config.JobsConfig
 - [Phase 09]: forge/forgetest/db.go uses ../../.. (3 levels) for repo root — one more level than internal/forgetest which used ../..
 - [Phase 09]: All forge/ package implementations moved directly (no indirection wrappers) — locked decision preserved from plan
+- [Phase 09]: forge.App stores *config.Config (internal) not forge.Config — Config wrapper is only for the public API surface at New() boundary
+- [Phase 09]: API APIConfig field added to internal/config/config.go so a.cfg.API works in Listen() without requiring SetupAPI callers to supply it separately
+- [Phase 09]: forge.Error mirrors errors.go.tmpl exactly including UniqueViolation and ForeignKeyViolation constructors, so generated gen/errors and forge.Error are structurally identical
+- [Phase 09]: pgconn.CommandTag imported as github.com/jackc/pgx/v5/pgconn (subdirectory of pgx v5 module, not separate pgconn module)
 
 ### Pending Todos
 
@@ -235,5 +240,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 09-02-PLAN.md
+Stopped at: Completed 09-03-PLAN.md
 Resume file: .planning/phases/09-public-api-surface-end-to-end-flow/09-CONTEXT.md

@@ -154,17 +154,17 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **CLI-01**: `forge init <name>` scaffolds a new project with forge.toml, main.go, directory structure
 - [ ] **CLI-02**: `forge dev` starts development server with file watching and hot reload for .go, .templ, .sql, .css files
-- [ ] **CLI-03**: `forge build` compiles a single production binary with embedded templates, static assets, and migrations
+- [x] **CLI-03**: `forge build` compiles a single production binary with embedded templates, static assets, and migrations
 - [ ] **CLI-04**: `forge db create/drop/seed/console/reset` manages the development database
 - [ ] **CLI-05**: `forge routes` lists all registered routes (HTML + API)
 - [ ] **CLI-06**: `forge tool sync` downloads/updates tool binaries (templ, sqlc, tailwind, atlas)
-- [ ] **CLI-07**: `forge deploy` builds and packages for deployment
+- [x] **CLI-07**: `forge deploy` builds and packages for deployment
 
 ### Configuration & Deployment
 
 - [x] **DEPLOY-01**: All configuration via forge.toml, overridable by environment variables (12-factor)
-- [ ] **DEPLOY-02**: Production binary is a single file < 30MB
-- [ ] **DEPLOY-03**: Server starts in < 100ms cold start
+- [x] **DEPLOY-02**: Production binary is a single file < 30MB
+- [x] **DEPLOY-03**: Server starts in < 100ms cold start
 - [ ] **DEPLOY-04**: Zero npm — no Node.js dependency anywhere in the toolchain
 - [ ] **DEPLOY-05**: Tailwind CSS compiled via standalone CLI binary
 
@@ -316,14 +316,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-04 | Phase 6 | Pending |
 | CLI-01 | Phase 1 | Pending |
 | CLI-02 | Phase 2 | Pending |
-| CLI-03 | Phase 8 | Pending |
+| CLI-03 | Phase 8 | Complete |
 | CLI-04 | Phase 3 | Pending |
 | CLI-05 | Phase 5 | Pending |
 | CLI-06 | Phase 1 | Pending |
-| CLI-07 | Phase 8 | Pending |
+| CLI-07 | Phase 8 | Complete |
 | DEPLOY-01 | Phase 8 | Complete |
-| DEPLOY-02 | Phase 8 | Pending |
-| DEPLOY-03 | Phase 8 | Pending |
+| DEPLOY-02 | Phase 8 | Complete |
+| DEPLOY-03 | Phase 8 | Complete |
 | DEPLOY-04 | Phase 1 | Pending |
 | DEPLOY-05 | Phase 6 | Pending |
 | OTEL-01 | Phase 8 | Complete |

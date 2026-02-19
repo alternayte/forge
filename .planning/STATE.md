@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 8 of 8 (Background Jobs & Production Readiness)
-Plan: 3 of 5 in current phase
-Status: In Progress
-Last activity: 2026-02-19 — Completed 08-02-PLAN.md (OTel observability foundation: config env overrides, slog handler, OTel SDK, admin server)
+Plan: 5 of 5 in current phase
+Status: Complete
+Last activity: 2026-02-19 — Completed 08-05-PLAN.md (forge build + forge deploy CLI commands, embed.go template)
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [█████████░] 93%
 | Phase 07 P05 | 4m | 2 tasks | 4 files |
 | Phase 08 P02 | 6 | 2 tasks | 4 files |
 | Phase 08 P01 | 5 | 2 tasks | 6 files |
+| Phase 08 P05 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -195,6 +196,7 @@ Recent decisions affecting current work:
 - [Phase 08]: pprof registered on admin mux only (not DefaultServeMux) — prevents exposure on public port
 - [Phase 08]: FORGE_ENV=production forces LogFormat=json regardless of TOML — production always emits structured logs
 - [Phase 08]: ApplyEnvOverrides silently ignores unparseable values after slog.Warn — avoids crash on misconfiguration
+- [Phase 08]: forge build shells out to sub-processes — pipeline orchestrator pattern for clean separation; embed.go written by build command (not generate) since it belongs in project root
 
 ### Pending Todos
 
@@ -207,5 +209,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 08-01-PLAN.md (Phase 7 regressions fixed, schema Hooks DSL, HooksIR parser types, hasHooks/pascal funcmap helpers)
-Resume file: .planning/phases/08-background-jobs-production-readiness/08-04-PLAN.md
+Stopped at: Completed 08-05-PLAN.md (forge build + forge deploy CLI commands, embed.go template)
+Resume file: N/A — all phases complete

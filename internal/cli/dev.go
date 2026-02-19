@@ -17,10 +17,15 @@ import (
 func newDevCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dev",
-		Short: "Start development server with file watching",
-		Long: `Starts a development server that watches for file changes in resources/
-and internal/ directories. When schema files change, code is automatically
-regenerated. Watches .go, .templ, .sql, and .css files.
+		Short: "Watch files and regenerate code on changes",
+		Long: `Watches for file changes in resources/ and internal/ directories and
+automatically re-runs code generation when files change. This is equivalent
+to running 'forge generate' each time you save a file.
+
+This command does NOT run your application. To run your app, use 'go run .'
+in a separate terminal.
+
+Watched file types: .go, .templ, .sql, .css
 
 Ctrl+C to stop.`,
 		RunE: runDev,

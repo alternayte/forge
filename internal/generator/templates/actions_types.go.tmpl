@@ -10,7 +10,7 @@ import (
 )
 
 // DB defines the database interface required by action implementations.
-// This matches the pgx pool interface methods used for queries.
+// This matches the pgx pool interface methods used for queries and transactions.
 type DB interface {
 	// QueryRow executes a query that returns at most one row.
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
@@ -20,6 +20,9 @@ type DB interface {
 
 	// Exec executes a query without returning any rows.
 	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+
+	// Begin starts a transaction. Required for transactional job enqueueing (JOBS-02).
+	Begin(ctx context.Context) (pgx.Tx, error)
 }
 
 // CreateValidator is an optional interface that action implementations can implement

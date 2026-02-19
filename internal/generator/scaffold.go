@@ -24,14 +24,26 @@ type scaffoldFile struct {
 }
 
 // scaffoldFiles returns the list of scaffold files for a resource.
-func scaffoldFiles() []scaffoldFile {
-	return []scaffoldFile{
+// It conditionally includes jobs.go when the resource declares Hooks.
+func scaffoldFiles(resource parser.ResourceIR) []scaffoldFile {
+	files := []scaffoldFile{
 		{Template: "templates/scaffold_form.templ.tmpl", OutputPath: "views/form.templ", IsTempl: true},
 		{Template: "templates/scaffold_list.templ.tmpl", OutputPath: "views/list.templ", IsTempl: true},
 		{Template: "templates/scaffold_detail.templ.tmpl", OutputPath: "views/detail.templ", IsTempl: true},
 		{Template: "templates/scaffold_handlers.go.tmpl", OutputPath: "handlers.go", IsTempl: false},
 		{Template: "templates/scaffold_hooks.go.tmpl", OutputPath: "hooks.go", IsTempl: false},
 	}
+
+	// Conditionally include jobs.go for resources with lifecycle hooks (JOBS-02).
+	if len(resource.Options.Hooks.AfterCreate) > 0 || len(resource.Options.Hooks.AfterUpdate) > 0 {
+		files = append(files, scaffoldFile{
+			Template:   "templates/scaffold_jobs.go.tmpl",
+			OutputPath: "jobs.go",
+			IsTempl:    false,
+		})
+	}
+
+	return files
 }
 
 // templateData is the data passed to scaffold templates.
@@ -51,7 +63,7 @@ func ScaffoldResource(resource parser.ResourceIR, projectRoot, projectModule str
 		return nil, fmt.Errorf("rendering scaffold templates: %w", err)
 	}
 
-	for _, sf := range scaffoldFiles() {
+	for _, sf := range scaffoldFiles(resource) {
 		fullPath := filepath.Join(resourceDir, sf.OutputPath)
 
 		// Skip if file already exists
@@ -86,8 +98,9 @@ func renderScaffoldToMap(resource parser.ResourceIR, projectModule string) (map[
 		ProjectModule: projectModule,
 	}
 
-	out := make(map[string][]byte, len(scaffoldFiles()))
-	for _, sf := range scaffoldFiles() {
+	files := scaffoldFiles(resource)
+	out := make(map[string][]byte, len(files))
+	for _, sf := range files {
 		rendered, err := renderTemplate(sf.Template, data)
 		if err != nil {
 			return nil, fmt.Errorf("rendering template %s: %w", sf.Template, err)
@@ -110,7 +123,7 @@ func DiffResource(resource parser.ResourceIR, projectRoot, projectModule string)
 	dmp := diffmatchpatch.New()
 	var sb strings.Builder
 
-	for _, sf := range scaffoldFiles() {
+	for _, sf := range scaffoldFiles(resource) {
 		fullPath := filepath.Join(resourceDir, sf.OutputPath)
 
 		sb.WriteString(fmt.Sprintf("=== %s ===\n", sf.OutputPath))

@@ -8,8 +8,12 @@ import (
 	"encoding/json"
 	"reflect"
 {{- end}}
-{{- if or (hasAnyPermission .Options) (hasAnyVisibility .Fields) (.Options.Auditable)}}
+{{- if or (hasAnyPermission .Options) (hasAnyVisibility .Fields) (.Options.Auditable) (hasHooks .Options)}}
 	forgeauth "github.com/forge-framework/forge/internal/auth"
+{{- end}}
+{{- if hasHooks .Options}}
+	"github.com/jackc/pgx/v5"
+	"github.com/riverqueue/river"
 {{- end}}
 
 	"github.com/google/uuid"
@@ -18,6 +22,26 @@ import (
 	"{{.ProjectModule}}/gen/queries"
 	"{{.ProjectModule}}/gen/validation"
 )
+{{- if hasHooks .Options}}
+
+// Job args types (generated inline to avoid import cycles with resources/)
+{{- range .Options.Hooks.AfterCreate}}
+type {{pascal .Kind}}Args struct {
+	ResourceID uuid.UUID `json:"resource_id"`
+	TenantID   uuid.UUID `json:"tenant_id"`
+}
+
+func ({{pascal .Kind}}Args) Kind() string { return "{{.Kind}}" }
+{{- end}}
+{{- range .Options.Hooks.AfterUpdate}}
+type {{pascal .Kind}}Args struct {
+	ResourceID uuid.UUID `json:"resource_id"`
+	TenantID   uuid.UUID `json:"tenant_id"`
+}
+
+func ({{pascal .Kind}}Args) Kind() string { return "{{.Kind}}" }
+{{- end}}
+{{- end}}
 
 // {{.Name}}Actions defines the business logic interface for {{.Name}} operations.
 // Both HTML and API handlers call this interface to prevent logic duplication.
@@ -52,6 +76,9 @@ type {{.Name}}Actions interface {
 // Developers can embed this struct and override specific methods for custom behavior.
 type Default{{.Name}}Actions struct {
 	DB DB
+{{- if hasHooks .Options}}
+	River *river.Client[pgx.Tx]
+{{- end}}
 }
 
 // List retrieves {{plural .Name | lower}} with filtering, sorting, and pagination.
@@ -112,6 +139,29 @@ func (a *Default{{.Name}}Actions) Create(ctx context.Context, input models.{{.Na
 		return nil, errors.NewValidationError(valErrs)
 	}
 
+{{- if .Options.Hooks.AfterCreate}}
+	// Transactional create with AfterCreate job hooks (JOBS-02)
+	var result *models.{{.Name}}
+	err := pgx.BeginFunc(ctx, a.DB, func(tx pgx.Tx) error {
+		// TODO: Execute Bob insert via tx (replace when Bob is wired)
+		_ = tx
+		if result == nil {
+			return errors.InternalError("Create not yet implemented")
+		}
+		{{- range .Options.Hooks.AfterCreate}}
+		// Enqueue {{.Kind}} job in same transaction (JOBS-02)
+		tenantID, _ := forgeauth.TenantFromContext(ctx)
+		if _, enqErr := a.River.InsertTx(ctx, tx, {{pascal .Kind}}Args{
+			ResourceID: result.ID,
+			TenantID:   tenantID,
+		}, &river.InsertOpts{ {{- if .Queue}}Queue: "{{.Queue}}",{{end}} }); enqErr != nil {
+			return enqErr
+		}
+		{{- end}}
+		return nil
+	})
+	return result, err
+{{- else}}
 	// TODO: Execute Bob insert query
 	// This will be implemented when Bob query execution layer is complete.
 	// For now, return internal error to maintain compilable interface.
@@ -121,6 +171,7 @@ func (a *Default{{.Name}}Actions) Create(ctx context.Context, input models.{{.Na
 {{- end}}
 
 	return nil, errors.InternalError("Create not yet implemented")
+{{- end}}
 }
 
 // Update updates an existing {{.Name}} after validation.
@@ -141,6 +192,39 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 	beforeItem, _ := a.Get(ctx, id)
 {{- end}}
 
+{{- if .Options.Hooks.AfterUpdate}}
+	// Transactional update with AfterUpdate job hooks (JOBS-02)
+	var item *models.{{.Name}}
+	err := pgx.BeginFunc(ctx, a.DB, func(tx pgx.Tx) error {
+		// TODO: Execute Bob update via tx (replace when Bob is wired)
+		_ = tx
+		_ = id
+		if item == nil {
+			return errors.NotFound("{{.Name}}", id.String())
+		}
+		{{- range .Options.Hooks.AfterUpdate}}
+		// Enqueue {{.Kind}} job in same transaction (JOBS-02)
+		tenantID, _ := forgeauth.TenantFromContext(ctx)
+		if _, enqErr := a.River.InsertTx(ctx, tx, {{pascal .Kind}}Args{
+			ResourceID: item.ID,
+			TenantID:   tenantID,
+		}, &river.InsertOpts{ {{- if .Queue}}Queue: "{{.Queue}}",{{end}} }); enqErr != nil {
+			return enqErr
+		}
+		{{- end}}
+		return nil
+	})
+{{- if .Options.Auditable}}
+	// Record update in audit log with JSONB diff (AUDIT-02)
+	// No-op updates produce empty diff — no audit entry (AUDIT-03)
+	if beforeItem != nil && item != nil {
+		if auditErr := a.recordAudit(ctx, "update", id, beforeItem, item); auditErr != nil {
+			_ = auditErr // Log but don't fail the update
+		}
+	}
+{{- end}}
+	return item, err
+{{- else}}
 	// TODO: Execute Bob update query
 	// This will be implemented when Bob query execution layer is complete.
 	// For now, return not found error to maintain compilable interface.
@@ -160,6 +244,7 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 {{- end}}
 
 	return nil, errors.NotFound("{{.Name}}", id.String())
+{{- end}}
 }
 
 // Delete removes a {{.Name}} by ID.

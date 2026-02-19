@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 5: REST API Generation** - Huma integration, OpenAPI 3.1, and route generation
 - [x] **Phase 6: Hypermedia UI Generation** - Templ/Datastar integration and HTML handlers (completed 2026-02-17)
 - [ ] **Phase 7: Advanced Data Features** - Relationships, soft delete, multi-tenancy, audit logging
-- [ ] **Phase 8: Background Jobs & Production Readiness** - River integration, observability, CLI, deployment
+- [x] **Phase 8: Background Jobs & Production Readiness** - River integration, observability, CLI, deployment (completed 2026-02-19)
 
 ## Phase Details
 
@@ -180,7 +180,7 @@ Plans:
   7. forge deploy packages for deployment successfully
   8. OpenTelemetry traces, Prometheus metrics, and structured logging (slog) work in production
   9. All configuration via forge.toml is overridable by environment variables (12-factor)
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [ ] 08-01-PLAN.md — Fix Phase 7 regressions + Schema DSL/Parser/IR for Hooks (SCHEMA-09)
@@ -203,4 +203,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 5. REST API Generation | 0/4 | Planned | - |
 | 6. Hypermedia UI Generation | 9/9 | Complete    | 2026-02-17 |
 | 7. Advanced Data Features | 4/5 | In Progress|  |
-| 8. Background Jobs & Production Readiness | 4/5 | In Progress|  |
+| 8. Background Jobs & Production Readiness | 5/5 | Complete   | 2026-02-19 |

@@ -123,10 +123,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Background Jobs
 
-- [ ] **JOBS-01**: River client is integrated as first-class citizen with transactional enqueueing
-- [ ] **JOBS-02**: Schema-defined AfterCreate/AfterUpdate hooks automatically enqueue River jobs in the same DB transaction
-- [ ] **JOBS-03**: Jobs carry TenantID explicitly for scoped queries in workers
-- [ ] **JOBS-04**: Job queues are configurable via forge.toml (queue names, concurrency limits)
+- [x] **JOBS-01**: River client is integrated as first-class citizen with transactional enqueueing
+- [x] **JOBS-02**: Schema-defined AfterCreate/AfterUpdate hooks automatically enqueue River jobs in the same DB transaction
+- [x] **JOBS-03**: Jobs carry TenantID explicitly for scoped queries in workers
+- [x] **JOBS-04**: Job queues are configurable via forge.toml (queue names, concurrency limits)
 
 ### Audit Logging
 
@@ -297,10 +297,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TENANT-02 | Phase 7 | Complete |
 | TENANT-03 | Phase 7 | Complete |
 | TENANT-04 | Phase 7 | Complete |
-| JOBS-01 | Phase 8 | Pending |
-| JOBS-02 | Phase 8 | Pending |
-| JOBS-03 | Phase 8 | Pending |
-| JOBS-04 | Phase 8 | Pending |
+| JOBS-01 | Phase 8 | Complete |
+| JOBS-02 | Phase 8 | Complete |
+| JOBS-03 | Phase 8 | Complete |
+| JOBS-04 | Phase 8 | Complete |
 | AUDIT-01 | Phase 7 | Complete |
 | AUDIT-02 | Phase 7 | Complete |
 | AUDIT-03 | Phase 7 | Complete |

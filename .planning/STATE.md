@@ -61,6 +61,7 @@ Progress: [██████████] 100%
 | Phase 07 P05 | 4m | 2 tasks | 4 files |
 | Phase 08 P02 | 6 | 2 tasks | 4 files |
 | Phase 08 P01 | 5 | 2 tasks | 6 files |
+| Phase 08 P04 | 6m | 2 tasks | 7 files |
 | Phase 08 P05 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
@@ -197,6 +198,11 @@ Recent decisions affecting current work:
 - [Phase 08]: FORGE_ENV=production forces LogFormat=json regardless of TOML — production always emits structured logs
 - [Phase 08]: ApplyEnvOverrides silently ignores unparseable values after slog.Warn — avoids crash on misconfiguration
 - [Phase 08]: forge build shells out to sub-processes — pipeline orchestrator pattern for clean separation; embed.go written by build command (not generate) since it belongs in project root
+- [Phase 08-04]: River client type is *river.Client[pgx.Tx] not *river.Client[pgxpool.Pool] — riverpgxv5.New(pool) driver's transaction type is pgx.Tx
+- [Phase 08-04]: DB interface extended with Begin(ctx) to satisfy pgx.BeginFunc's interface requirement — pgxpool.Pool already implements this; no impact on existing callers
+- [Phase 08-04]: Inline Args structs in generated actions.go (not in resources/ scaffold) avoid import cycles — generated gen/actions cannot import user-scaffolded resources/{name}/
+- [Phase 08-04]: if result == nil guard before InsertTx calls makes transactional job enqueueing structurally present and vet-clean before Bob queries are wired
+- [Phase 08-04]: TenantFromContext returns (uuid.UUID, bool); blank identifier discards the bool — tenant ID defaults to uuid.Nil when context missing
 
 ### Pending Todos
 

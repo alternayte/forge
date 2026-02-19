@@ -180,7 +180,7 @@ Plans:
   7. forge deploy packages for deployment successfully
   8. OpenTelemetry traces, Prometheus metrics, and structured logging (slog) work in production
   9. All configuration via forge.toml is overridable by environment variables (12-factor)
-**Plans:** 1/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
 - [ ] 08-01-PLAN.md — Fix Phase 7 regressions + Schema DSL/Parser/IR for Hooks (SCHEMA-09)
@@ -203,4 +203,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 5. REST API Generation | 0/4 | Planned | - |
 | 6. Hypermedia UI Generation | 9/9 | Complete    | 2026-02-17 |
 | 7. Advanced Data Features | 4/5 | In Progress|  |
-| 8. Background Jobs & Production Readiness | 1/5 | In Progress|  |
+| 8. Background Jobs & Production Readiness | 3/5 | In Progress|  |

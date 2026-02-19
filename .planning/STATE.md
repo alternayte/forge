@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 8 of 8 (Background Jobs & Production Readiness)
-Plan: 3 of 5 in current phase
+Plan: 3 of 5 in current phase (08-01 completed retroactively 2026-02-19)
 Status: In Progress
-Last activity: 2026-02-19 — Completed 08-03-PLAN.md (SSE connection limiter and PostgreSQL LISTEN/NOTIFY hub)
+Last activity: 2026-02-19 — Completed 08-01-PLAN.md (Phase 7 regression fixes, Hooks DSL, HooksIR parser, hasHooks/pascal funcmap)
 
 Progress: [█████████░] 92%
 
@@ -59,6 +59,8 @@ Progress: [█████████░] 92%
 | 07 | 03 | 6m | 2 | 5 |
 | Phase 07 P04 | 2 | 2 tasks | 2 files |
 | Phase 07 P05 | 4m | 2 tasks | 4 files |
+| Phase 08 P02 | 6 | 2 tasks | 4 files |
+| Phase 08 P01 | 5 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -186,6 +188,13 @@ Recent decisions affecting current work:
 - [Phase 08-03]: Single forge_events PostgreSQL LISTEN channel with channel+tenantID routing in JSON payload — keeps LISTEN count to 1 regardless of resource count
 - [Phase 08-03]: Reconnect errors matching context.Canceled are not logged — avoids shutdown noise from expected cancellation
 - [Phase 08-03]: unsubscribe uses swap-with-last-element removal — O(1) slice removal; fan-out order is irrelevant
+- [Phase 08-01]: Template variable $resourceOptions captures ResourceOptionsIR in outer range so SoftDelete is accessible inside inner range .Fields — Go templates use $ for top-level data, not intermediate range context
+- [Phase 08-01]: TestGenerateAtlasSchema_ProductTable updated to assert products_sku_unique_active (partial WHERE deleted_at IS NULL) when SoftDelete=true — test was inconsistent with Phase 7 behavior
+- [Phase 08-01]: pascal() is a distinct funcmap helper from camel() — camel() only uppercases first char, pascal() splits on underscores for full snake_case conversion
+- [Phase 08]: OTel stdout exporter in dev (OTLPEndpoint empty), OTLP HTTP in prod — avoids requiring collector locally
+- [Phase 08]: pprof registered on admin mux only (not DefaultServeMux) — prevents exposure on public port
+- [Phase 08]: FORGE_ENV=production forces LogFormat=json regardless of TOML — production always emits structured logs
+- [Phase 08]: ApplyEnvOverrides silently ignores unparseable values after slog.Warn — avoids crash on misconfiguration
 
 ### Pending Todos
 
@@ -198,5 +207,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 08-03-PLAN.md (SSE connection limiter and PostgreSQL LISTEN/NOTIFY hub)
+Stopped at: Completed 08-01-PLAN.md (Phase 7 regressions fixed, schema Hooks DSL, HooksIR parser types, hasHooks/pascal funcmap helpers)
 Resume file: .planning/phases/08-background-jobs-production-readiness/08-04-PLAN.md

@@ -17,7 +17,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **SCHEMA-06**: Developer can define Enum fields with specific allowed values and a Default
 - [x] **SCHEMA-07**: Developer can define field-level Visibility and Mutability based on roles
 - [x] **SCHEMA-08**: Developer can define CRUD-level Permissions (List, Read, Create, Update, Delete) per resource
-- [ ] **SCHEMA-09**: Developer can define schema Hooks (AfterCreate, AfterUpdate) referencing River job kinds
+- [x] **SCHEMA-09**: Developer can define schema Hooks (AfterCreate, AfterUpdate) referencing River job kinds
 
 ### Parser
 
@@ -224,7 +224,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCHEMA-06 | Phase 1 | Pending |
 | SCHEMA-07 | Phase 7 | Complete |
 | SCHEMA-08 | Phase 7 | Complete |
-| SCHEMA-09 | Phase 8 | Pending |
+| SCHEMA-09 | Phase 8 | Complete |
 | PARSE-01 | Phase 1 | Pending |
 | PARSE-02 | Phase 1 | Pending |
 | PARSE-03 | Phase 1 | Pending |

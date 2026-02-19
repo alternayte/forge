@@ -162,7 +162,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Configuration & Deployment
 
-- [ ] **DEPLOY-01**: All configuration via forge.toml, overridable by environment variables (12-factor)
+- [x] **DEPLOY-01**: All configuration via forge.toml, overridable by environment variables (12-factor)
 - [ ] **DEPLOY-02**: Production binary is a single file < 30MB
 - [ ] **DEPLOY-03**: Server starts in < 100ms cold start
 - [ ] **DEPLOY-04**: Zero npm — no Node.js dependency anywhere in the toolchain
@@ -170,9 +170,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Observability
 
-- [ ] **OTEL-01**: OpenTelemetry traces on HTTP requests and database queries
-- [ ] **OTEL-02**: Prometheus-compatible metrics endpoint
-- [ ] **OTEL-03**: Structured logging via slog with JSON format in production
+- [x] **OTEL-01**: OpenTelemetry traces on HTTP requests and database queries
+- [x] **OTEL-02**: Prometheus-compatible metrics endpoint
+- [x] **OTEL-03**: Structured logging via slog with JSON format in production
 
 ## v2 Requirements
 
@@ -321,14 +321,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLI-05 | Phase 5 | Pending |
 | CLI-06 | Phase 1 | Pending |
 | CLI-07 | Phase 8 | Pending |
-| DEPLOY-01 | Phase 8 | Pending |
+| DEPLOY-01 | Phase 8 | Complete |
 | DEPLOY-02 | Phase 8 | Pending |
 | DEPLOY-03 | Phase 8 | Pending |
 | DEPLOY-04 | Phase 1 | Pending |
 | DEPLOY-05 | Phase 6 | Pending |
-| OTEL-01 | Phase 8 | Pending |
-| OTEL-02 | Phase 8 | Pending |
-| OTEL-03 | Phase 8 | Pending |
+| OTEL-01 | Phase 8 | Complete |
+| OTEL-02 | Phase 8 | Complete |
+| OTEL-03 | Phase 8 | Complete |
 
 **Coverage:**
 - v1 requirements: 89 total

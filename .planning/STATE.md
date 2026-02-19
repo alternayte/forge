@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 8 of 8 (Background Jobs & Production Readiness)
-Plan: 3 of 5 in current phase (08-01 completed retroactively 2026-02-19)
+Plan: 3 of 5 in current phase
 Status: In Progress
-Last activity: 2026-02-19 — Completed 08-01-PLAN.md (Phase 7 regression fixes, Hooks DSL, HooksIR parser, hasHooks/pascal funcmap)
+Last activity: 2026-02-19 — Completed 08-02-PLAN.md (OTel observability foundation: config env overrides, slog handler, OTel SDK, admin server)
 
-Progress: [█████████░] 92%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 

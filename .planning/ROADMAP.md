@@ -205,12 +205,12 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 6. Hypermedia UI Generation | 9/9 | Complete    | 2026-02-17 |
 | 7. Advanced Data Features | 4/5 | In Progress|  |
 | 8. Background Jobs & Production Readiness | 5/5 | Complete   | 2026-02-19 |
-| 9. Public API Surface & End-to-End Flow | 3/5 | In Progress|  |
+| 9. Public API Surface & End-to-End Flow | 4/5 | In Progress|  |
 
 ### Phase 9: Public API Surface & End-to-End Flow
 **Goal**: Make schema/ public (move from internal/), create minimal forge runtime package (App, Error, Transaction re-exports), fix scaffold templates (go.mod dependency, schema import path, main.go server wiring), update all internal imports. End state: forge init myapp && forge generate && go build ./... works end-to-end.
 **Depends on**: Phase 8
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 - [ ] 09-01-PLAN.md — Module path rename (forge-framework -> alternayte) and move schema/ to root

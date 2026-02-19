@@ -136,12 +136,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### SSE & Real-Time
 
-- [ ] **SSE-01**: Global SSE connection limiter caps concurrent connections per process (default: 5000)
-- [ ] **SSE-02**: Per-user SSE connection limit prevents single-user exhaustion (default: 10)
-- [ ] **SSE-03**: On server shutdown, SSE connections receive close event and drain gracefully
-- [ ] **SSE-04**: Single shared PostgreSQL LISTEN connection fans out events to subscribers via Go channels
-- [ ] **SSE-05**: Backpressure: full subscriber channel buffers drop events and send refresh signal
-- [ ] **SSE-06**: NotifyHub interface allows swapping to Redis/NATS for connection pooler deployments
+- [x] **SSE-01**: Global SSE connection limiter caps concurrent connections per process (default: 5000)
+- [x] **SSE-02**: Per-user SSE connection limit prevents single-user exhaustion (default: 10)
+- [x] **SSE-03**: On server shutdown, SSE connections receive close event and drain gracefully
+- [x] **SSE-04**: Single shared PostgreSQL LISTEN connection fans out events to subscribers via Go channels
+- [x] **SSE-05**: Backpressure: full subscriber channel buffers drop events and send refresh signal
+- [x] **SSE-06**: NotifyHub interface allows swapping to Redis/NATS for connection pooler deployments
 
 ### Testing
 
@@ -304,12 +304,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUDIT-01 | Phase 7 | Complete |
 | AUDIT-02 | Phase 7 | Complete |
 | AUDIT-03 | Phase 7 | Complete |
-| SSE-01 | Phase 8 | Pending |
-| SSE-02 | Phase 8 | Pending |
-| SSE-03 | Phase 8 | Pending |
-| SSE-04 | Phase 8 | Pending |
-| SSE-05 | Phase 8 | Pending |
-| SSE-06 | Phase 8 | Pending |
+| SSE-01 | Phase 8 | Complete |
+| SSE-02 | Phase 8 | Complete |
+| SSE-03 | Phase 8 | Complete |
+| SSE-04 | Phase 8 | Complete |
+| SSE-05 | Phase 8 | Complete |
+| SSE-06 | Phase 8 | Complete |
 | TEST-01 | Phase 6 | Pending |
 | TEST-02 | Phase 6 | Pending |
 | TEST-03 | Phase 6 | Pending |

@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 
 ## Current Position
 
-Phase: 7 of 8 (Advanced Data Features)
-Plan: 5 of 5 in current phase (COMPLETE)
-Status: Phase Complete
-Last activity: 2026-02-18 — Completed 07-05-PLAN.md (Audit logging: JSONB diffs, audit_logs table, audit API endpoint)
+Phase: 8 of 8 (Background Jobs & Production Readiness)
+Plan: 3 of 5 in current phase
+Status: In Progress
+Last activity: 2026-02-19 — Completed 08-03-PLAN.md (SSE connection limiter and PostgreSQL LISTEN/NOTIFY hub)
 
-Progress: [█████████░] 87%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -182,6 +182,10 @@ Recent decisions affecting current work:
 - [Phase 07-05]: Audit calls in Update are no-ops until Bob query execution is wired (beforeItem/item both nil); pattern correctly shows intent
 - [Phase 07-05]: GetDB() type assertion pattern used in audit endpoint to access DB without expanding XxxActions interface
 - [Phase 07-05]: computeJSONDiff is package-level function (not method) — stateless, reusable, testable without DefaultActions receiver
+- [Phase 08-03]: PostgresHub.Publish accepts Executor interface (not *pgxpool.Pool) — avoids circular import with generated actions package
+- [Phase 08-03]: Single forge_events PostgreSQL LISTEN channel with channel+tenantID routing in JSON payload — keeps LISTEN count to 1 regardless of resource count
+- [Phase 08-03]: Reconnect errors matching context.Canceled are not logged — avoids shutdown noise from expected cancellation
+- [Phase 08-03]: unsubscribe uses swap-with-last-element removal — O(1) slice removal; fan-out order is irrelevant
 
 ### Pending Todos
 
@@ -193,6 +197,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-18
-Stopped at: Completed 07-05-PLAN.md (Audit logging: JSONB diffs, audit_logs table, audit API endpoint)
-Resume file: .planning/phases/08-cli-finalization (next phase)
+Last session: 2026-02-19
+Stopped at: Completed 08-03-PLAN.md (SSE connection limiter and PostgreSQL LISTEN/NOTIFY hub)
+Resume file: .planning/phases/08-background-jobs-production-readiness/08-04-PLAN.md

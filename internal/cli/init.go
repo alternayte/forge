@@ -47,8 +47,8 @@ func newInitCmd() *cobra.Command {
 				Name:                 projectName,
 				Module:               scaffold.InferModule(projectName),
 				GoVersion:            scaffold.GetGoVersion(),
-				ExampleResource:      "product",
-				ExampleResourceTitle: "Product",
+				ExampleResource:      "post",
+				ExampleResourceTitle: "Post",
 			}
 
 			// Create project structure
@@ -77,7 +77,7 @@ func newInitCmd() *cobra.Command {
 				"go.mod",
 				".gitignore",
 				"README.md",
-				filepath.Join("resources", "product", "schema.go"),
+				filepath.Join("resources", "post", "schema.go"),
 			}
 
 			fmt.Println(ui.Grouped("Files:", files))

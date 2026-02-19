@@ -180,10 +180,14 @@ Plans:
   7. forge deploy packages for deployment successfully
   8. OpenTelemetry traces, Prometheus metrics, and structured logging (slog) work in production
   9. All configuration via forge.toml is overridable by environment variables (12-factor)
-**Plans**: TBD
+**Plans:** 5 plans
 
 Plans:
-- TBD
+- [ ] 08-01-PLAN.md — Fix Phase 7 regressions + Schema DSL/Parser/IR for Hooks (SCHEMA-09)
+- [ ] 08-02-PLAN.md — Config env override, slog, OTel bootstrap, admin server (DEPLOY-01, OTEL-01-03)
+- [ ] 08-03-PLAN.md — SSE connection limiter + LISTEN/NOTIFY hub (SSE-01-06)
+- [ ] 08-04-PLAN.md — River client, transactional job hooks, worker scaffold (JOBS-01-04)
+- [ ] 08-05-PLAN.md — forge build + forge deploy CLI commands (CLI-03, CLI-07, DEPLOY-02-03)
 
 ## Progress
 

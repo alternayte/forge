@@ -3,7 +3,6 @@ package scaffold
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -83,19 +82,11 @@ func renderTemplate(src, dest string, data ProjectData) error {
 	return tmpl.Execute(f, data)
 }
 
-// InferModule generates a module path from the project name
+// InferModule returns the project name as the Go module path.
+// A bare project name (e.g., "myapp") is a valid Go module path and is the
+// correct default for a new project. Users can update go.mod manually if they
+// want a full github.com/user/project path after creating their repository.
 func InferModule(projectName string) string {
-	// Try to detect git user config for generating github.com/user/project
-	cmd := exec.Command("git", "config", "user.name")
-	output, err := cmd.Output()
-	if err == nil && len(output) > 0 {
-		username := strings.TrimSpace(string(output))
-		// Convert to lowercase and replace spaces with hyphens for GitHub username
-		username = strings.ToLower(strings.ReplaceAll(username, " ", "-"))
-		return fmt.Sprintf("github.com/%s/%s", username, projectName)
-	}
-
-	// Fallback to just project name
 	return projectName
 }
 

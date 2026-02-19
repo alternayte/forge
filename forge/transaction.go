@@ -1,0 +1,38 @@
+package forge
+
+import (
+	"context"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
+)
+
+// DB is an interface compatible with pgx transaction types.
+// It allows code to accept either a pool or a transaction.
+type DB interface {
+	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+}
+
+// TransactionFunc is a function that executes within a database transaction.
+type TransactionFunc func(ctx context.Context, tx pgx.Tx) error
+
+// Transaction wraps pgx.BeginFunc to provide a clean transaction API.
+// The transaction commits if fn returns nil, and rolls back if fn returns an error.
+func Transaction(ctx context.Context, pool *pgxpool.Pool, fn TransactionFunc) error {
+	return pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
+		return fn(ctx, tx)
+	})
+}
+
+// TransactionWithJobs wraps a transaction and provides a River client for transactional job enqueueing.
+// Jobs enqueued with client.InsertTx will only be visible after the transaction commits.
+// The transaction commits if fn returns nil, and rolls back if fn returns an error.
+func TransactionWithJobs(ctx context.Context, pool *pgxpool.Pool, client *river.Client[pgx.Tx], fn func(ctx context.Context, tx pgx.Tx, jobs *river.Client[pgx.Tx]) error) error {
+	return pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
+		return fn(ctx, tx, client)
+	})
+}

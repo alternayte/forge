@@ -10,6 +10,8 @@ import (
 type FactoryTemplateData struct {
 	Name          string
 	Fields        []parser.FieldIR
+	Options       parser.ResourceOptionsIR
+	HasTimestamps bool
 	ProjectModule string
 }
 
@@ -21,6 +23,8 @@ func GenerateFactories(resources []parser.ResourceIR, outputDir string, projectM
 		data := FactoryTemplateData{
 			Name:          resource.Name,
 			Fields:        resource.Fields,
+			Options:       resource.Options,
+			HasTimestamps: resource.HasTimestamps,
 			ProjectModule: projectModule,
 		}
 

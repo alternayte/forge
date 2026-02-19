@@ -6,6 +6,7 @@ schema "public" {
 
 {{range .Resources}}
 {{$resourceName := .Name}}
+{{$resourceOptions := .Options}}
 table "{{plural (snake .Name)}}" {
   schema = schema.public
 
@@ -67,7 +68,7 @@ table "{{plural (snake .Name)}}" {
 
   {{range .Fields}}
   {{if hasModifier .Modifiers "Unique"}}
-  {{if $.Options.SoftDelete}}
+  {{if $resourceOptions.SoftDelete}}
   index "{{plural (snake $resourceName)}}_{{snake .Name}}_unique_active" {
     columns = [column.{{snake .Name}}]
     unique  = true

@@ -119,12 +119,16 @@ func TestGenerateAtlasSchema_ProductTable(t *testing.T) {
 		t.Error("Generated file missing deleted_at column")
 	}
 
-	// Verify unique index on SKU
-	if !strings.Contains(contentStr, `index "products_sku_unique"`) {
-		t.Error("Generated file missing unique index on SKU")
+	// Verify unique index on SKU — with SoftDelete=true, a partial unique index is generated
+	// (WHERE deleted_at IS NULL) so unique rows are enforced only among non-deleted records.
+	if !strings.Contains(contentStr, `index "products_sku_unique_active"`) {
+		t.Error("Generated file missing partial unique index on SKU (soft-delete resource)")
 	}
 	if !strings.Contains(contentStr, "unique  = true") {
 		t.Error("Generated file missing unique = true for SKU index")
+	}
+	if !strings.Contains(contentStr, `where   = "deleted_at IS NULL"`) {
+		t.Error("Generated file missing WHERE clause on soft-delete unique index")
 	}
 
 	// Verify regular index on Category

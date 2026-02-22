@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/alternayte/forge/internal/config"
+	"github.com/alternayte/forge/internal/stringutil"
 	"github.com/alternayte/forge/internal/generator"
 	"github.com/alternayte/forge/internal/parser"
 	"github.com/alternayte/forge/internal/toolsync"
@@ -124,7 +125,7 @@ func runGenerateResource(cmd *cobra.Command, args []string, diff bool) error {
 	fmt.Println()
 	fmt.Printf("  %s\n", ui.DimStyle.Render(fmt.Sprintf(
 		"Scaffolded %d %s for %s (%d skipped)",
-		created, pluralize("file", created), target.Name, skipped,
+		created, stringutil.Pluralize("file", created), target.Name, skipped,
 	)))
 	fmt.Println()
 

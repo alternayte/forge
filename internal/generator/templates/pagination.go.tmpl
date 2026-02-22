@@ -84,7 +84,8 @@ func OffsetPaginationMods(page, pageSize int) []bob.Mod[*dialect.SelectQuery] {
 // Fetches pageSize + 1 records to detect if there's a next page.
 // If cursor is nil, starts from the beginning.
 // sortDir should be "asc" or "desc" to match the order of the query.
-func CursorPaginationMods(cur *cursor, pageSize int, sortDir string) []bob.Mod[*dialect.SelectQuery] {
+// allowedFields is a whitelist of valid sort field column names to prevent SQL injection.
+func CursorPaginationMods(cur *cursor, pageSize int, sortDir string, allowedFields []string) []bob.Mod[*dialect.SelectQuery] {
 	// Validate and cap pageSize
 	if pageSize < 1 {
 		pageSize = 10
@@ -99,6 +100,19 @@ func CursorPaginationMods(cur *cursor, pageSize int, sortDir string) []bob.Mod[*
 
 	// If cursor is provided, add WHERE clause for row value comparison
 	if cur != nil {
+		// Validate SortField against whitelist to prevent SQL injection
+		valid := false
+		for _, f := range allowedFields {
+			if cur.SortField == f {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			// Invalid cursor field — treat as "start from beginning"
+			return mods
+		}
+
 		// Build tuple comparison: (sort_field, id) > (cursor.SortValue, cursor.ID) for ASC
 		// or (sort_field, id) < (cursor.SortValue, cursor.ID) for DESC
 		operator := ">"

@@ -13,6 +13,7 @@ import (
 	"github.com/alternayte/forge/internal/errors"
 	"github.com/alternayte/forge/internal/generator"
 	"github.com/alternayte/forge/internal/parser"
+	"github.com/alternayte/forge/internal/stringutil"
 	"github.com/alternayte/forge/internal/ui"
 	"github.com/alternayte/forge/internal/watcher"
 	"github.com/spf13/cobra"
@@ -151,7 +152,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	modelsDir := filepath.Join(genDir, "models")
 	if dirExists(modelsDir) {
 		modelCount, _ := countFilesInDir(modelsDir)
-		fmt.Println(ui.Success(fmt.Sprintf("gen/models/ — %d model %s", modelCount, pluralize("file", modelCount))))
+		fmt.Println(ui.Success(fmt.Sprintf("gen/models/ — %d model %s", modelCount, stringutil.Pluralize("file", modelCount))))
 	}
 
 	atlasSchemaPath := filepath.Join(genDir, "atlas", "schema.hcl")
@@ -162,14 +163,14 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	factoriesDir := filepath.Join(genDir, "factories")
 	if dirExists(factoriesDir) {
 		factoryCount, _ := countFilesInDir(factoriesDir)
-		fmt.Println(ui.Success(fmt.Sprintf("gen/factories/ — %d factory %s", factoryCount, pluralize("file", factoryCount))))
+		fmt.Println(ui.Success(fmt.Sprintf("gen/factories/ — %d factory %s", factoryCount, stringutil.Pluralize("file", factoryCount))))
 	}
 
 	fmt.Println()
 
 	// Print summary with timing
 	duration := time.Since(startTime)
-	summary := fmt.Sprintf("Generated %d %s in %dms", len(result.Resources), pluralize("resource", len(result.Resources)), duration.Milliseconds())
+	summary := fmt.Sprintf("Generated %d %s in %dms", len(result.Resources), stringutil.Pluralize("resource", len(result.Resources)), duration.Milliseconds())
 	fmt.Println("  " + ui.DimStyle.Render(summary))
 	fmt.Println()
 

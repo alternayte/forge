@@ -3,7 +3,7 @@
 package validation
 
 import (
-	"strings"
+	"net/mail"
 
 	"{{.ProjectModule}}/gen/models"
 	"github.com/google/uuid"
@@ -102,12 +102,14 @@ func Validate{{.Name}}Create(input models.{{.Name}}Create) ValidationErrors {
 	{{- if eq .Type "Email"}}
 	// Check email format for {{.Name}}
 	{{- if isRequired .Modifiers}}
-	if !strings.Contains(input.{{.Name}}, "@") || !strings.Contains(input.{{.Name}}, ".") {
+	if _, err := mail.ParseAddress(input.{{.Name}}); err != nil {
 		errors.Add("{{snake .Name}}", "format", "{{.Name}} must be a valid email address")
 	}
 	{{- else}}
-	if input.{{.Name}} != nil && (!strings.Contains(*input.{{.Name}}, "@") || !strings.Contains(*input.{{.Name}}, ".")) {
-		errors.Add("{{snake .Name}}", "format", "{{.Name}} must be a valid email address")
+	if input.{{.Name}} != nil {
+		if _, err := mail.ParseAddress(*input.{{.Name}}); err != nil {
+			errors.Add("{{snake .Name}}", "format", "{{.Name}} must be a valid email address")
+		}
 	}
 	{{- end}}
 	{{- end}}
@@ -160,8 +162,10 @@ func Validate{{.Name}}Update(input models.{{.Name}}Update) ValidationErrors {
 
 	{{- if eq .Type "Email"}}
 	// Check email format for {{.Name}}
-	if input.{{.Name}} != nil && (!strings.Contains(*input.{{.Name}}, "@") || !strings.Contains(*input.{{.Name}}, ".")) {
-		errors.Add("{{snake .Name}}", "format", "{{.Name}} must be a valid email address")
+	if input.{{.Name}} != nil {
+		if _, err := mail.ParseAddress(*input.{{.Name}}); err != nil {
+			errors.Add("{{snake .Name}}", "format", "{{.Name}} must be a valid email address")
+		}
 	}
 	{{- end}}
 	{{- end}}

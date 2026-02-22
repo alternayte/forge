@@ -60,21 +60,20 @@ func Register{{.Name}}Routes(api huma.API, act actions.{{.Name}}Actions) {
 
 		// Build pagination metadata
 		hasMore := int64(page*pageSize) < total
-		var nextCursor string
-		if hasMore {
-			nextCursor = fmt.Sprintf("%d", page+1)
-		}
 
 		out := &List{{.Name}}Output{}
 		out.Body.Data = items
 		out.Body.Pagination = PaginationMeta{
-			NextCursor: nextCursor,
+			Page:       page,
+			PageSize:   pageSize,
+			TotalCount: total,
 			HasMore:    hasMore,
 		}
 
 		// Set RFC 8288 Link header when there are more results (rel="next")
-		if hasMore && nextCursor != "" {
-			out.Link = buildAPILinkHeader("/api/v1/{{kebab (plural .Name)}}", nextCursor, pageSize)
+		if hasMore {
+			nextPage := fmt.Sprintf("%d", page+1)
+			out.Link = buildAPILinkHeader("/api/v1/{{kebab (plural .Name)}}", nextPage, pageSize)
 		}
 
 		return out, nil

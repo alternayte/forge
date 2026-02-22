@@ -11,10 +11,14 @@ import (
 	"{{.ProjectModule}}/gen/errors"
 )
 
-// PaginationMeta contains cursor-based pagination metadata returned with list responses.
+// PaginationMeta contains offset-based pagination metadata returned with list responses.
 type PaginationMeta struct {
-	// NextCursor is the opaque cursor for fetching the next page.
-	NextCursor string `json:"next_cursor,omitempty" doc:"Cursor for next page"`
+	// Page is the current page number.
+	Page int `json:"page" doc:"Current page number"`
+	// PageSize is the number of items per page.
+	PageSize int `json:"page_size" doc:"Items per page"`
+	// TotalCount is the total number of matching items.
+	TotalCount int64 `json:"total_count" doc:"Total matching items"`
 	// HasMore indicates whether additional results exist beyond the current page.
 	HasMore bool `json:"has_more" doc:"Whether more results exist"`
 }

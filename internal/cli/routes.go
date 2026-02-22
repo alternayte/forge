@@ -2,11 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"strings"
-	"unicode"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/alternayte/forge/internal/parser"
+	"github.com/alternayte/forge/internal/stringutil"
 	"github.com/spf13/cobra"
 )
 
@@ -165,8 +164,8 @@ func runRoutes(cmd *cobra.Command, args []string) error {
 // apiRoutes returns the 5 standard CRUD API routes for a resource.
 func apiRoutes(resource parser.ResourceIR) []Route {
 	name := resource.Name
-	pluralName := routePlural(name)
-	kebabPlural := routeKebab(pluralName)
+	pluralName := stringutil.Plural(name)
+	kebabPlural := stringutil.Kebab(pluralName)
 
 	return []Route{
 		{
@@ -202,8 +201,8 @@ func apiRoutes(resource parser.ResourceIR) []Route {
 // Datastar SSE for create/update/delete mutations.
 func htmlRoutes(resource parser.ResourceIR) []Route {
 	name := resource.Name
-	pluralName := routePlural(name)
-	kebabPlural := routeKebab(pluralName)
+	pluralName := stringutil.Plural(name)
+	kebabPlural := stringutil.Kebab(pluralName)
 
 	return []Route{
 		{
@@ -244,47 +243,3 @@ func htmlRoutes(resource parser.ResourceIR) []Route {
 	}
 }
 
-// routePlural naively pluralizes a resource name.
-func routePlural(s string) string {
-	if strings.HasSuffix(s, "y") {
-		return s[:len(s)-1] + "ies"
-	}
-	if strings.HasSuffix(s, "s") || strings.HasSuffix(s, "x") ||
-		strings.HasSuffix(s, "ch") || strings.HasSuffix(s, "sh") {
-		return s + "es"
-	}
-	return s + "s"
-}
-
-// routeKebab converts PascalCase to kebab-case (e.g., "BlogPost" -> "blog-post").
-func routeKebab(s string) string {
-	if len(s) == 0 {
-		return s
-	}
-
-	var result strings.Builder
-	runes := []rune(s)
-
-	for i, r := range runes {
-		if i > 0 && unicode.IsUpper(r) {
-			prev := runes[i-1]
-			if unicode.IsLower(prev) {
-				result.WriteRune('-')
-			} else if i+1 < len(runes) && unicode.IsLower(runes[i+1]) {
-				result.WriteRune('-')
-			}
-		}
-		result.WriteRune(unicode.ToLower(r))
-	}
-
-	return result.String()
-}
-
-// routeLowerCamel converts PascalCase to camelCase.
-func routeLowerCamel(s string) string {
-	if len(s) == 0 {
-		return s
-	}
-	runes := []rune(s)
-	return strings.ToLower(string(runes[0:1])) + string(runes[1:])
-}

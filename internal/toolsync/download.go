@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -16,6 +17,11 @@ import (
 
 // DownloadTool downloads a tool binary from the registry.
 func DownloadTool(tool ToolDef, platform Platform, destDir string, progress func(pct float64)) error {
+	return DownloadToolWithContext(context.Background(), tool, platform, destDir, progress)
+}
+
+// DownloadToolWithContext downloads a tool binary from the registry with context support.
+func DownloadToolWithContext(ctx context.Context, tool ToolDef, platform Platform, destDir string, progress func(pct float64)) error {
 	// Apply OS/Arch mappings for tools that use non-standard platform names
 	mappedPlatform := platform
 	if mapped, ok := tool.OSMap[mappedPlatform.OS]; ok {
@@ -38,7 +44,7 @@ func DownloadTool(tool ToolDef, platform Platform, destDir string, progress func
 
 	// Download to memory buffer for checksum verification
 	var buf bytes.Buffer
-	if err := downloadWithProgress(url, &buf, progress); err != nil {
+	if err := downloadWithProgress(ctx, url, &buf, progress); err != nil {
 		return fmt.Errorf("download: %w", err)
 	}
 
@@ -72,6 +78,11 @@ func DownloadTool(tool ToolDef, platform Platform, destDir string, progress func
 
 // SyncAll downloads all tools, skipping those already installed unless forced.
 func SyncAll(tools []ToolDef, platform Platform, destDir string, onProgress func(tool string, pct float64)) error {
+	return SyncAllWithContext(context.Background(), tools, platform, destDir, onProgress)
+}
+
+// SyncAllWithContext downloads all tools with context support, skipping those already installed unless forced.
+func SyncAllWithContext(ctx context.Context, tools []ToolDef, platform Platform, destDir string, onProgress func(tool string, pct float64)) error {
 	for _, tool := range tools {
 		if IsToolInstalled(destDir, tool.BinaryName) {
 			// Already installed, skip
@@ -82,7 +93,7 @@ func SyncAll(tools []ToolDef, platform Platform, destDir string, onProgress func
 		}
 
 		// Download tool
-		if err := DownloadTool(tool, platform, destDir, func(pct float64) {
+		if err := DownloadToolWithContext(ctx, tool, platform, destDir, func(pct float64) {
 			if onProgress != nil {
 				onProgress(tool.Name, pct)
 			}
@@ -131,8 +142,12 @@ func constructURL(urlTemplate string, platform Platform, version string) (string
 }
 
 // downloadWithProgress downloads a URL to a writer, calling progress callback with percentage.
-func downloadWithProgress(url string, w io.Writer, progress func(pct float64)) error {
-	resp, err := http.Get(url)
+func downloadWithProgress(ctx context.Context, url string, w io.Writer, progress func(pct float64)) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}

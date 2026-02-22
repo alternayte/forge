@@ -8,6 +8,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/alternayte/forge/internal/config"
 	"github.com/alternayte/forge/internal/parser"
+	"github.com/alternayte/forge/internal/stringutil"
 	"github.com/spf13/cobra"
 
 	"path/filepath"
@@ -117,8 +118,8 @@ func buildSpecFromIR(resources []parser.ResourceIR, projectModule string, format
 	// Add operations for each resource
 	for _, resource := range resources {
 		name := resource.Name
-		pluralName := routePlural(name)
-		kebabPlural := routeKebab(pluralName)
+		pluralName := stringutil.Plural(name)
+		kebabPlural := stringutil.Kebab(pluralName)
 		tag := name
 
 		tagNames[tag] = true

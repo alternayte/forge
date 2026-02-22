@@ -105,11 +105,18 @@ func (a *Default{{.Name}}Actions) List(ctx context.Context, filter models.{{.Nam
 	filterMods = append(filterMods, queries.{{.Name}}Filters{}.ActiveMod())
 {{- end}}
 {{- if .Options.TenantScoped}}
-	filterMods = append(filterMods, queries.{{.Name}}Filters{}.TenantMod(ctx))
+	tenantMod, tenantErr := queries.{{.Name}}Filters{}.TenantMod(ctx)
+	if tenantErr != nil {
+		return nil, 0, errors.InternalError(tenantErr)
+	}
+	filterMods = append(filterMods, tenantMod)
 {{- end}}
 
 	// Build sort mod
-	sortMod := queries.{{.Name}}SortMod(sort)
+	sortMod, sortErr := queries.{{.Name}}SortMod(sort)
+	if sortErr != nil {
+		return nil, 0, errors.BadRequest(sortErr.Error())
+	}
 
 	// Count query — same filters, no sort/pagination
 	countMods := []bob.Mod[*dialect.SelectQuery]{
@@ -295,11 +302,6 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 		return nil, errors.NewValidationError(valErrs)
 	}
 
-{{- if .Options.Auditable}}
-	// Fetch before-state for audit diff (must happen before UPDATE) (AUDIT-02)
-	beforeItem, _ := a.Get(ctx, id)
-{{- end}}
-
 	// Build dynamic SET clause from non-nil fields
 	setClauses := []string{}
 	updateArgs := []any{}
@@ -356,6 +358,21 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 	// Transactional update with AfterUpdate job hooks (JOBS-02)
 	var item *models.{{.Name}}
 	err := pgx.BeginFunc(ctx, a.DB, func(tx pgx.Tx) error {
+{{- if .Options.Auditable}}
+		// Lock row and fetch before-state atomically (AUDIT-02, prevents TOCTOU race)
+		beforeRows, bErr := tx.Query(ctx,
+			`SELECT * FROM {{plural (snake .Name)}} WHERE id = $1 FOR UPDATE`, id)
+		if bErr != nil {
+			return errors.MapDBError(bErr)
+		}
+		beforeItem, bErr := pgx.CollectOneRow(beforeRows, pgx.RowToStructByName[models.{{.Name}}])
+		if bErr != nil {
+			if errors.IsNotFound(bErr) {
+				return errors.NotFound("{{.Name}}", id.String())
+			}
+			return errors.MapDBError(bErr)
+		}
+{{- end}}
 		txRows, qErr := tx.Query(ctx, updateSQL, updateArgs...)
 		if qErr != nil {
 			return errors.MapDBError(qErr)
@@ -378,18 +395,56 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 			return enqErr
 		}
 		{{- end}}
-		return nil
-	})
 {{- if .Options.Auditable}}
-	// Record update in audit log with JSONB diff (AUDIT-02)
-	// No-op updates produce empty diff — no audit entry (AUDIT-03)
-	if beforeItem != nil && item != nil {
-		if auditErr := a.recordAudit(ctx, "update", id, beforeItem, item); auditErr != nil {
+		// Record update in audit log with JSONB diff (AUDIT-02)
+		// No-op updates produce empty diff — no audit entry (AUDIT-03)
+		if auditErr := a.recordAuditTx(ctx, tx, "update", id, &beforeItem, item); auditErr != nil {
 			_ = auditErr // Log but don't fail the update
 		}
-	}
 {{- end}}
+		return nil
+	})
 	return item, err
+{{- else}}
+{{- if .Options.Auditable}}
+	// Wrap in transaction for atomic before-read + update + audit (prevents TOCTOU race)
+	var result *models.{{.Name}}
+	err := pgx.BeginFunc(ctx, a.DB, func(tx pgx.Tx) error {
+		// Lock row and fetch before-state atomically
+		beforeRows, bErr := tx.Query(ctx,
+			`SELECT * FROM {{plural (snake .Name)}} WHERE id = $1 FOR UPDATE`, id)
+		if bErr != nil {
+			return errors.MapDBError(bErr)
+		}
+		beforeItem, bErr := pgx.CollectOneRow(beforeRows, pgx.RowToStructByName[models.{{.Name}}])
+		if bErr != nil {
+			if errors.IsNotFound(bErr) {
+				return errors.NotFound("{{.Name}}", id.String())
+			}
+			return errors.MapDBError(bErr)
+		}
+
+		txRows, qErr := tx.Query(ctx, updateSQL, updateArgs...)
+		if qErr != nil {
+			return errors.MapDBError(qErr)
+		}
+		item, qErr := pgx.CollectOneRow(txRows, pgx.RowToStructByName[models.{{.Name}}])
+		if qErr != nil {
+			if errors.IsNotFound(qErr) {
+				return errors.NotFound("{{.Name}}", id.String())
+			}
+			return errors.MapDBError(qErr)
+		}
+		result = &item
+
+		// Record update in audit log with JSONB diff (AUDIT-02)
+		// No-op updates produce empty diff — no audit entry (AUDIT-03)
+		if auditErr := a.recordAuditTx(ctx, tx, "update", id, &beforeItem, result); auditErr != nil {
+			_ = auditErr // Log but don't fail the update
+		}
+		return nil
+	})
+	return result, err
 {{- else}}
 	rows, err := a.DB.Query(ctx, updateSQL, updateArgs...)
 	if err != nil {
@@ -402,16 +457,8 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 		}
 		return nil, errors.MapDBError(err)
 	}
-{{- if .Options.Auditable}}
-	// Record update in audit log with JSONB diff (AUDIT-02)
-	// No-op updates produce empty diff — no audit entry (AUDIT-03)
-	if beforeItem != nil {
-		if auditErr := a.recordAudit(ctx, "update", id, beforeItem, &item); auditErr != nil {
-			_ = auditErr // Log but don't fail the update
-		}
-	}
-{{- end}}
 	return &item, nil
+{{- end}}
 {{- end}}
 }
 
@@ -554,6 +601,44 @@ func (a *Default{{.Name}}Actions) recordAudit(ctx context.Context, op string, re
 	}
 
 	_, err := a.DB.Exec(ctx,
+		`INSERT INTO audit_logs (resource_type, resource_id, operation, changed_fields, created_by)
+		 VALUES ($1, $2, $3, $4, $5)`,
+		"{{snake .Name}}", resourceID, op, diffJSON, userIDPtr,
+	)
+	return err
+}
+
+// recordAuditTx records a change to the audit_logs table within an existing transaction.
+// Used by Update to ensure the before-read + update + audit happen atomically (TOCTOU safe).
+func (a *Default{{.Name}}Actions) recordAuditTx(ctx context.Context, tx pgx.Tx, op string, resourceID uuid.UUID, before, after any) error {
+	var beforeMap, afterMap map[string]any
+
+	if before != nil {
+		b, _ := json.Marshal(before)
+		json.Unmarshal(b, &beforeMap) //nolint:errcheck
+	}
+	a2, _ := json.Marshal(after)
+	json.Unmarshal(a2, &afterMap) //nolint:errcheck
+
+	diff := computeJSONDiff(beforeMap, afterMap)
+	if diff == nil && op != "create" {
+		return nil // No changes — skip audit entry (AUDIT-03)
+	}
+
+	// For creates, record all fields as the diff
+	if op == "create" && diff == nil {
+		diff = afterMap
+	}
+
+	userID := forgeauth.UserFromContext(ctx)
+	diffJSON, _ := json.Marshal(diff)
+
+	var userIDPtr *uuid.UUID
+	if userID != (uuid.UUID{}) {
+		userIDPtr = &userID
+	}
+
+	_, err := tx.Exec(ctx,
 		`INSERT INTO audit_logs (resource_type, resource_id, operation, changed_fields, created_by)
 		 VALUES ($1, $2, $3, $4, $5)`,
 		"{{snake .Name}}", resourceID, op, diffJSON, userIDPtr,

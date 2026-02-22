@@ -64,8 +64,8 @@ func TestGenerateAPI(t *testing.T) {
 	if !strings.Contains(typesStr, "toHumaError") {
 		t.Error("Generated types.go missing toHumaError function")
 	}
-	if !strings.Contains(typesStr, `json:"next_cursor,omitempty"`) {
-		t.Error("Generated types.go PaginationMeta missing next_cursor field")
+	if !strings.Contains(typesStr, `json:"page"`) {
+		t.Error("Generated types.go PaginationMeta missing page field")
 	}
 	if !strings.Contains(typesStr, `json:"has_more"`) {
 		t.Error("Generated types.go PaginationMeta missing has_more field")

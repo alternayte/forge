@@ -12,6 +12,11 @@ Built with [Forge](https://github.com/alternayte/forge) — a Go code generator 
   - [Add a custom API route](#add-a-custom-api-route)
   - [Add authentication](#add-authentication)
   - [Customize business logic](#customize-business-logic-for-a-resource)
+  - [Customize the login page](#customize-the-login-page)
+  - [Add middleware](#add-middleware)
+  - [Seed the database](#seed-the-database)
+  - [Use pagination in API requests](#use-pagination-in-api-requests)
+  - [Role-based permissions](#role-based-permissions)
   - [Run in development mode](#run-in-development-mode)
 - [Defining Resources](#defining-resources)
   - [Field Types](#field-types)
@@ -189,6 +194,112 @@ func (a *myPostActions) Create(ctx context.Context, input models.PostCreate) (*m
 // In main.go:
 registry.Register("post", &myPostActions{DefaultPostActions: actions.DefaultPostActions{DB: pool}})
 ```
+
+### Customize the login page
+
+Override the built-in login page by registering your own handler before `RequireAuth()`:
+
+```go
+app := forge.New(cfg).
+    UsePool(pool).
+    UsePasswordAuth(authenticateUser).
+    UseCustomRoutes(func(r chi.Router) {
+        // Override the default login page with your own template
+        r.Get("/auth/login", func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("Content-Type", "text/html; charset=utf-8")
+            myLoginTemplate.Execute(w, nil)
+        })
+    }).
+    RequireAuth()
+```
+
+Or, to completely control auth routes, skip `UsePasswordAuth` and register routes manually.
+
+### Add middleware
+
+Add middleware to all routes using the builder's `UseMiddleware` method:
+
+```go
+app := forge.New(cfg).
+    UsePool(pool).
+    UseMiddleware(
+        middleware.Logger,
+        middleware.Recoverer,
+        myCustomCORSMiddleware,
+    ).
+    RegisterAPIRoutes(func(api huma.API) {
+        genapi.RegisterAllRoutes(api, registry)
+    }).
+    RegisterHTMLRoutes(func(r chi.Router) {
+        // You can also add middleware to specific route groups
+        r.Use(myHTMLOnlyMiddleware)
+        genhtml.RegisterAllHTMLRoutes(r, registry)
+    })
+```
+
+### Seed the database
+
+Create a seed file at `db/seeds/seed.sql` and run:
+
+```bash
+forge db seed
+```
+
+Example seed file (`db/seeds/seed.sql`):
+
+```sql
+INSERT INTO posts (id, title, body, status, created_at, updated_at) VALUES
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Welcome Post', 'Hello world!', 'published', NOW(), NOW()),
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 'Draft Post', 'Work in progress', 'draft', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+```
+
+### Use pagination in API requests
+
+List endpoints support pagination, sorting, and filtering via query parameters:
+
+```bash
+# Page 2, 25 items per page, sorted by title descending
+curl "http://localhost:3000/api/v1/posts?page=2&limit=25&sort=title&sort_dir=desc"
+
+# Filter by status
+curl "http://localhost:3000/api/v1/posts?status=published"
+```
+
+The response includes pagination metadata:
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "page": 2,
+    "page_size": 25,
+    "total_count": 100,
+    "has_more": true
+  }
+}
+```
+
+When `has_more` is true, a `Link` header with `rel="next"` is also returned for RFC 8288 compliance.
+
+### Role-based permissions
+
+Define permissions in your schema to restrict operations by role:
+
+```go
+var Product = schema.Define("Product",
+    schema.UUID("ID").PrimaryKey(),
+    schema.String("Name").Required(),
+    schema.Timestamps(),
+
+    // Only admins and editors can create/update; anyone can read
+    schema.Permission("create", "admin", "editor"),
+    schema.Permission("update", "admin", "editor"),
+    schema.Permission("delete", "admin"),
+)
+```
+
+At runtime, the user's role is read from the session context via `forgeauth.RoleFromContext(ctx)`. When a user without a matching role attempts a restricted operation, they receive a `403 Forbidden` response. The role is stored in the session alongside the user ID when `LoginUser` is called.
 
 ### Run in development mode
 
@@ -558,12 +669,99 @@ app := forge.New(cfg).
 
 **Email/password auth:**
 
+`UsePasswordAuth` expects a function matching the `auth.PasswordAuthenticator` type:
+
+```go
+// auth.PasswordAuthenticator type:
+//   func(ctx context.Context, email, password string) (userID string, err error)
+```
+
+Here is a complete, working `authenticateUser` implementation:
+
+```go
+import (
+    "context"
+    "fmt"
+
+    "github.com/jackc/pgx/v5/pgxpool"
+    "golang.org/x/crypto/bcrypt"
+)
+
+func authenticateUser(pool *pgxpool.Pool) auth.PasswordAuthenticator {
+    return func(ctx context.Context, email, password string) (string, error) {
+        var userID, hashedPassword string
+        err := pool.QueryRow(ctx,
+            `SELECT id, password_hash FROM users WHERE email = $1`, email,
+        ).Scan(&userID, &hashedPassword)
+        if err != nil {
+            return "", fmt.Errorf("invalid credentials")
+        }
+
+        if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)); err != nil {
+            return "", fmt.Errorf("invalid credentials")
+        }
+
+        return userID, nil
+    }
+}
+```
+
+Wire it in `main.go`:
+
 ```go
 app := forge.New(cfg).
     UsePool(pool).
-    UsePasswordAuth(authenticateUser).
+    UsePasswordAuth(authenticateUser(pool)).
     RequireAuth().
     // ...
+```
+
+**OAuth `findOrCreateUser`:**
+
+`UseOAuth` expects a function matching the `auth.UserFinder` type:
+
+```go
+// auth.UserFinder type:
+//   func(ctx context.Context, gothUser goth.User) (userID string, err error)
+```
+
+Here is a complete, working `findOrCreateUser` implementation:
+
+```go
+import (
+    "context"
+    "fmt"
+
+    "github.com/google/uuid"
+    "github.com/jackc/pgx/v5/pgxpool"
+    "github.com/markbates/goth"
+)
+
+func findOrCreateUser(pool *pgxpool.Pool) auth.UserFinder {
+    return func(ctx context.Context, gothUser goth.User) (string, error) {
+        // Try to find existing user by email
+        var userID string
+        err := pool.QueryRow(ctx,
+            `SELECT id FROM users WHERE email = $1`, gothUser.Email,
+        ).Scan(&userID)
+        if err == nil {
+            return userID, nil // Found existing user
+        }
+
+        // Create new user
+        newID := uuid.New().String()
+        _, err = pool.Exec(ctx,
+            `INSERT INTO users (id, email, name, provider, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, NOW(), NOW())`,
+            newID, gothUser.Email, gothUser.Name, gothUser.Provider,
+        )
+        if err != nil {
+            return "", fmt.Errorf("create user: %w", err)
+        }
+
+        return newID, nil
+    }
+}
 ```
 
 This automatically registers:

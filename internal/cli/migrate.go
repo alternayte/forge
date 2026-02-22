@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/alternayte/forge/internal/config"
 	"github.com/alternayte/forge/internal/migrate"
@@ -392,22 +393,7 @@ func getDevURL(databaseURL string) string {
 func containsDestructiveKeywords(errMsg string) bool {
 	keywords := []string{"WARNING", "Destructive", "DROP TABLE", "DROP COLUMN"}
 	for _, kw := range keywords {
-		if containsString(errMsg, kw) {
-			return true
-		}
-	}
-	return false
-}
-
-// containsString checks if a string contains a substring (case-insensitive).
-func containsString(s, substr string) bool {
-	return len(s) >= len(substr) &&
-		(s == substr || len(s) > len(substr) && findSubstring(s, substr))
-}
-
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
+		if strings.Contains(errMsg, kw) {
 			return true
 		}
 	}

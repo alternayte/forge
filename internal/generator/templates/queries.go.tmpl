@@ -3,6 +3,8 @@
 package queries
 
 import (
+	"fmt"
+
 	"{{.ProjectModule}}/gen/models"
 	{{- if .Options.TenantScoped}}
 	"context"
@@ -74,7 +76,8 @@ func {{$resource}}FilterMods(filter models.{{$resource}}Filter) []bob.Mod[*diale
 }
 
 // {{$resource}}SortMod converts a {{$resource}}Sort to a Bob query mod.
-func {{$resource}}SortMod(sort models.{{$resource}}Sort) bob.Mod[*dialect.SelectQuery] {
+// Returns an error if the sort field is not a recognized sortable column.
+func {{$resource}}SortMod(sort models.{{$resource}}Sort) (bob.Mod[*dialect.SelectQuery], error) {
 	var columnName string
 
 	// Map field name to column name
@@ -85,17 +88,19 @@ func {{$resource}}SortMod(sort models.{{$resource}}Sort) bob.Mod[*dialect.Select
 		columnName = "{{snake .Name}}"
 	{{- end}}
 	{{- end}}
+	case "":
+		// No sort field specified — return no-op mod
+		return bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {}), nil
 	default:
-		// Invalid field, return no-op mod
-		return bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {})
+		return nil, fmt.Errorf("invalid sort field: %q", sort.Field)
 	}
 
 	// Build order by mod
 	orderBy := sm.OrderBy(psql.Quote(columnName))
 	if sort.Direction == "desc" {
-		return orderBy.Desc()
+		return orderBy.Desc(), nil
 	}
-	return orderBy.Asc()
+	return orderBy.Asc(), nil
 }
 {{- if .Options.SoftDelete}}
 
@@ -113,12 +118,12 @@ func (f {{$resource}}Filters) OnlyTrashedMod() bob.Mod[*dialect.SelectQuery] {
 {{- if .Options.TenantScoped}}
 
 // TenantMod scopes the query to the current tenant from context.
-// Panics if tenant ID is not in context — ensure TenantMiddleware is applied.
-func (f {{$resource}}Filters) TenantMod(ctx context.Context) bob.Mod[*dialect.SelectQuery] {
+// Returns an error if tenant ID is not in context.
+func (f {{$resource}}Filters) TenantMod(ctx context.Context) (bob.Mod[*dialect.SelectQuery], error) {
 	tenantID, ok := forgeauth.TenantFromContext(ctx)
 	if !ok {
-		panic("{{$resource}}: tenant ID required in context — is TenantMiddleware applied?")
+		return nil, fmt.Errorf("{{$resource}}: tenant ID required in context")
 	}
-	return sm.Where(psql.Quote("tenant_id").EQ(psql.Arg(tenantID)))
+	return sm.Where(psql.Quote("tenant_id").EQ(psql.Arg(tenantID))), nil
 }
 {{- end}}

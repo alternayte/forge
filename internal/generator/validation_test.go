@@ -119,7 +119,7 @@ func TestGenerateValidation(t *testing.T) {
 	}
 
 	// Verify Email format check
-	if !strings.Contains(contentStr, `strings.Contains(input.Email, "@")`) {
+	if !strings.Contains(contentStr, `mail.ParseAddress(input.Email)`) {
 		t.Error("Generated file should contain email format check")
 	}
 

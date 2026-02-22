@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 	"fmt"
+	"html"
+	"log"
 	"net/http"
 
 	"github.com/alexedwards/scs/v2"
@@ -82,18 +84,21 @@ func HandleOAuthCallback(sm *scs.SessionManager, findOrCreateUser UserFinder) ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		gothUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("OAuth callback error: %v", err), http.StatusInternalServerError)
+			log.Printf("oauth callback error: %v", err)
+			http.Error(w, "Authentication failed. Please try again.", http.StatusInternalServerError)
 			return
 		}
 
 		userID, err := findOrCreateUser(r.Context(), gothUser)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("find or create user: %v", err), http.StatusInternalServerError)
+			log.Printf("find or create user error: %v", err)
+			http.Error(w, "Authentication failed. Please try again.", http.StatusInternalServerError)
 			return
 		}
 
 		if err := LoginUser(sm, r, userID, gothUser.Email); err != nil {
-			http.Error(w, fmt.Sprintf("login failed: %v", err), http.StatusInternalServerError)
+			log.Printf("login session error: %v", err)
+			http.Error(w, "Authentication failed. Please try again.", http.StatusInternalServerError)
 			return
 		}
 
@@ -167,7 +172,8 @@ func HandleLoginSubmit(sm *scs.SessionManager, authenticateUser PasswordAuthenti
 		}
 
 		if err := LoginUser(sm, r, userID, email); err != nil {
-			http.Error(w, fmt.Sprintf("login failed: %v", err), http.StatusInternalServerError)
+			log.Printf("login session error: %v", err)
+			http.Error(w, "Authentication failed. Please try again.", http.StatusInternalServerError)
 			return
 		}
 
@@ -180,7 +186,8 @@ func HandleLoginSubmit(sm *scs.SessionManager, authenticateUser PasswordAuthenti
 func HandleLogout(sm *scs.SessionManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := LogoutUser(sm, r); err != nil {
-			http.Error(w, fmt.Sprintf("logout failed: %v", err), http.StatusInternalServerError)
+			log.Printf("logout error: %v", err)
+			http.Error(w, "Logout failed. Please try again.", http.StatusInternalServerError)
 			return
 		}
 		http.Redirect(w, r, "/auth/login", http.StatusFound)
@@ -192,7 +199,7 @@ func HandleLogout(sm *scs.SessionManager) http.HandlerFunc {
 func loginPageHTML(errMsg string) string {
 	errSection := ""
 	if errMsg != "" {
-		errSection = fmt.Sprintf(`<p style="color:red">%s</p>`, errMsg)
+		errSection = fmt.Sprintf(`<p style="color:red">%s</p>`, html.EscapeString(errMsg))
 	}
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">

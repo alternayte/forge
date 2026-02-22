@@ -3,8 +3,10 @@
 package middleware
 
 import (
+	"encoding/json"
 	stderrors "errors"
 	"fmt"
+	"html"
 	"net/http"
 	"strings"
 
@@ -47,9 +49,9 @@ func writeSSEError(w http.ResponseWriter, err *errors.Error) {
 	w.Header().Set("Connection", "keep-alive")
 	w.WriteHeader(http.StatusOK)
 
-	// Write Datastar merge fragments event with toast
+	// Write Datastar merge fragments event with toast (HTML-escaped to prevent XSS)
 	fmt.Fprintf(w, "event: datastar-merge-fragments\n")
-	fmt.Fprintf(w, "data: fragments <div id=\"toast-container\"><div class=\"toast toast-error\">%s</div></div>\n\n", err.Message)
+	fmt.Fprintf(w, "data: fragments <div id=\"toast-container\"><div class=\"toast toast-error\">%s</div></div>\n\n", html.EscapeString(err.Message))
 }
 
 // writeJSONError renders an error as JSON following RFC 9457 problem details shape.
@@ -57,13 +59,13 @@ func writeJSONError(w http.ResponseWriter, err *errors.Error) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(err.Status)
 
-	// RFC 9457-compatible shape
-	fmt.Fprintf(w, `{"status":%d,"title":"%s","detail":"%s","code":"%s"}`,
-		err.Status,
-		http.StatusText(err.Status),
-		err.Message,
-		err.Code,
-	)
+	// RFC 9457-compatible shape — use json.NewEncoder to safely encode values
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": err.Status,
+		"title":  http.StatusText(err.Status),
+		"detail": err.Message,
+		"code":   err.Code,
+	})
 }
 
 // writeHTMLError renders an error as a minimal HTML error page.
@@ -71,7 +73,7 @@ func writeHTMLError(w http.ResponseWriter, err *errors.Error) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(err.Status)
 
-	html := `<!DOCTYPE html>
+	htmlTmpl := `<!DOCTYPE html>
 <html>
 <head>
 	<meta charset="utf-8">
@@ -88,5 +90,5 @@ func writeHTMLError(w http.ResponseWriter, err *errors.Error) {
 </body>
 </html>`
 
-	fmt.Fprintf(w, html, err.Status, err.Status, err.Message)
+	fmt.Fprintf(w, htmlTmpl, err.Status, err.Status, html.EscapeString(err.Message))
 }

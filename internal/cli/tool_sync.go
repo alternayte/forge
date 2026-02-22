@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/alternayte/forge/internal/stringutil"
 	"github.com/alternayte/forge/internal/toolsync"
 	"github.com/alternayte/forge/internal/ui"
 	"github.com/spf13/cobra"
@@ -129,7 +130,7 @@ re-download all tools.`,
 			}
 
 			synced := len(tools) - len(failures)
-			summary := fmt.Sprintf("%d %s synced", synced, pluralize("tool", synced))
+			summary := fmt.Sprintf("%d %s synced", synced, stringutil.Pluralize("tool", synced))
 			fmt.Println("  " + ui.DimStyle.Render(summary))
 			fmt.Println()
 
@@ -165,10 +166,3 @@ func findProjectRoot() (string, error) {
 	}
 }
 
-// pluralize returns singular or plural form based on count
-func pluralize(word string, count int) string {
-	if count == 1 {
-		return word
-	}
-	return word + "s"
-}

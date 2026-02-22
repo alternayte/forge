@@ -8,6 +8,7 @@ import (
 
 	"github.com/alternayte/forge/internal/scaffold"
 	"github.com/alternayte/forge/internal/ui"
+	"github.com/alternayte/forge/internal/watcher"
 	"github.com/spf13/cobra"
 )
 
@@ -54,6 +55,11 @@ func newInitCmd() *cobra.Command {
 			// Create project structure
 			if err := scaffold.CreateProject(projectPath, data); err != nil {
 				return fmt.Errorf("failed to create project: %w", err)
+			}
+
+			// Scaffold Tailwind input CSS
+			if err := watcher.ScaffoldTailwindInput(projectPath); err != nil {
+				fmt.Println(ui.Info(fmt.Sprintf("Note: could not scaffold Tailwind input CSS: %v", err)))
 			}
 
 			// Initialize git repository if new directory was created

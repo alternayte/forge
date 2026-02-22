@@ -8,7 +8,9 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/dialect"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
 
@@ -58,7 +60,7 @@ func DecodeCursor(encoded string) (*cursor, error) {
 
 // OffsetPaginationMods returns Bob query mods for offset-based pagination.
 // Page numbers start at 1. PageSize is capped at 100.
-func OffsetPaginationMods(page, pageSize int) []sm.QueryMod[*psql.SelectQuery] {
+func OffsetPaginationMods(page, pageSize int) []bob.Mod[*dialect.SelectQuery] {
 	// Validate and cap parameters
 	if page < 1 {
 		page = 1
@@ -72,7 +74,7 @@ func OffsetPaginationMods(page, pageSize int) []sm.QueryMod[*psql.SelectQuery] {
 
 	offset := (page - 1) * pageSize
 
-	return []sm.QueryMod[*psql.SelectQuery]{
+	return []bob.Mod[*dialect.SelectQuery]{
 		sm.Limit(int64(pageSize)),
 		sm.Offset(int64(offset)),
 	}
@@ -82,7 +84,7 @@ func OffsetPaginationMods(page, pageSize int) []sm.QueryMod[*psql.SelectQuery] {
 // Fetches pageSize + 1 records to detect if there's a next page.
 // If cursor is nil, starts from the beginning.
 // sortDir should be "asc" or "desc" to match the order of the query.
-func CursorPaginationMods(cur *cursor, pageSize int, sortDir string) []sm.QueryMod[*psql.SelectQuery] {
+func CursorPaginationMods(cur *cursor, pageSize int, sortDir string) []bob.Mod[*dialect.SelectQuery] {
 	// Validate and cap pageSize
 	if pageSize < 1 {
 		pageSize = 10
@@ -91,7 +93,7 @@ func CursorPaginationMods(cur *cursor, pageSize int, sortDir string) []sm.QueryM
 		pageSize = 100
 	}
 
-	mods := []sm.QueryMod[*psql.SelectQuery]{
+	mods := []bob.Mod[*dialect.SelectQuery]{
 		sm.Limit(int64(pageSize + 1)), // Fetch one extra to detect hasNext
 	}
 

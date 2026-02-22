@@ -46,7 +46,17 @@ func NewAuthMiddleware(api huma.API, tokenStore auth.TokenStore, apiKeyStore aut
 // Handle implements the Huma middleware interface. It checks the Authorization
 // header for a bearer token or an API key and rejects requests without a valid
 // credential with HTTP 401.
+//
+// When both tokenStore and apiKeyStore are nil (no auth configured), the
+// middleware passes through without checking credentials. This allows freshly
+// generated projects to work out of the box before auth is set up.
 func (m *AuthMiddleware) Handle(ctx huma.Context, next func(huma.Context)) {
+	// No auth stores configured — pass through (dev mode / no auth)
+	if m.tokenStore == nil && m.apiKeyStore == nil {
+		next(ctx)
+		return
+	}
+
 	authHeader := ctx.Header("Authorization")
 	apiKeyHeader := ctx.Header("X-API-Key")
 

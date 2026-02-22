@@ -92,6 +92,11 @@ func SetupAPI(
 		registerRoutes(api)
 	}
 
+	// --- Documentation ---
+
+	// Register Scalar UI docs handler at /api/docs, pointing to the OpenAPI spec.
+	RegisterDocsHandler(router, "/api/openapi.json")
+
 	return api, nil
 }
 

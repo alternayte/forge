@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -90,12 +91,19 @@ Example:
 			}
 
 			// Build migrate config
+			devURL := getDevURL(cfg.Database.URL)
 			migrateCfg := migrate.Config{
 				AtlasBin:     atlasBin,
 				MigrationDir: filepath.Join(projectRoot, "migrations"),
 				SchemaURL:    schemaPath,
 				DatabaseURL:  cfg.Database.URL,
-				DevURL:       getDevURL(cfg.Database.URL),
+				DevURL:       devURL,
+			}
+
+			// Auto-create the dev database (Atlas needs a clean DB for diffing)
+			devHost, devPort, devDBName, devUser, devPass, err := parseDatabaseURL(devURL)
+			if err == nil {
+				_ = createDatabase(devHost, devPort, devDBName, devUser, devPass)
 			}
 
 			// Run diff
@@ -105,8 +113,8 @@ Example:
 
 			migrationFile, err := migrate.Diff(migrateCfg, name, force)
 			if err != nil {
-				// Check if it's a destructive change error (will be formatted already)
-				if !force && (containsDestructiveKeywords(err.Error())) {
+				// Destructive change warnings get special formatting
+				if !force && containsDestructiveKeywords(err.Error()) {
 					fmt.Println(err.Error())
 					fmt.Println()
 					return nil // Exit gracefully for destructive warnings
@@ -369,12 +377,15 @@ Example:
 }
 
 // getDevURL constructs a dev database URL from the main database URL.
-// For now, it just returns the same URL - Atlas will create a temporary schema.
-// In the future, we could parse and modify the URL to use a separate dev database.
+// Atlas requires a clean database for temporary schema comparison; using the
+// main database causes hangs and conflicts. We append "_dev" to the DB name.
 func getDevURL(databaseURL string) string {
-	// For simplicity, use the same database URL
-	// Atlas will create temporary schemas for diffing
-	return databaseURL
+	u, err := url.Parse(databaseURL)
+	if err != nil {
+		return databaseURL
+	}
+	u.Path = u.Path + "_dev"
+	return u.String()
 }
 
 // containsDestructiveKeywords checks if an error message contains destructive change keywords.

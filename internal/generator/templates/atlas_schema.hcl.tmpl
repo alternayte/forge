@@ -17,11 +17,13 @@ table "{{plural (snake .Name)}}" {
   }
 
   {{range .Fields}}
+  {{if not (eq (snake .Name) "id")}}
   column "{{snake .Name}}" {
     type = {{atlasTypeWithModifiers .}}
     null = {{atlasNull .Modifiers}}
     {{if hasDefault .}}default = {{atlasDefault .}}{{end}}
   }
+  {{end}}
   {{end}}
 
   {{if .HasTimestamps}}

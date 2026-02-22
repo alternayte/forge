@@ -163,7 +163,6 @@ func runRoutes(cmd *cobra.Command, args []string) error {
 }
 
 // apiRoutes returns the 5 standard CRUD API routes for a resource.
-// Structured as a separate function so HTML routes can be added alongside in Phase 6.
 func apiRoutes(resource parser.ResourceIR) []Route {
 	name := resource.Name
 	pluralName := routePlural(name)

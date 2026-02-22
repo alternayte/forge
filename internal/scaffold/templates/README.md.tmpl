@@ -1,15 +1,790 @@
 # {{.Name}}
 
-Built with [Forge](https://github.com/alternayte/forge).
+Built with [Forge](https://github.com/alternayte/forge) — a Go code generator for production-ready CRUD apps.
 
-## Getting Started
+## Table of Contents
 
-1. Define your resources in `resources/*/schema.go`
-2. Run `forge generate` to generate code
-3. Run `forge dev` to start the development server
+- [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
+- [How-To Recipes](#how-to-recipes)
+  - [Add a new resource](#add-a-new-resource)
+  - [Add a custom page](#add-a-custom-page)
+  - [Add a custom API route](#add-a-custom-api-route)
+  - [Add authentication](#add-authentication)
+  - [Customize business logic](#customize-business-logic-for-a-resource)
+  - [Run in development mode](#run-in-development-mode)
+- [Defining Resources](#defining-resources)
+  - [Field Types](#field-types)
+  - [Field Modifiers](#field-modifiers)
+  - [Relationships](#relationships)
+  - [Resource Options](#resource-options)
+  - [Permissions](#permissions)
+  - [Lifecycle Hooks](#lifecycle-hooks)
+- [Code Generation](#code-generation)
+- [Available Routes](#available-routes)
+  - [API Routes](#api-routes)
+  - [HTML Routes](#html-routes)
+- [Custom Business Logic](#custom-business-logic)
+  - [How the Registry works](#how-the-registry-works)
+  - [Overriding a single method](#overriding-a-single-method)
+- [Authentication](#authentication)
+  - [API Authentication](#api-authentication-bearer-tokens--api-keys)
+  - [HTML Authentication](#html-authentication-sessions--oauth)
+- [Database](#database)
+  - [Configuration](#configuration)
+  - [Commands](#commands)
+  - [Migrations](#migrations)
+- [Configuration Reference](#configuration-reference)
+  - [Environment Variable Overrides](#environment-variable-overrides)
+- [Testing](#testing)
+- [Development Workflow](#development-workflow)
+- [Deployment](#deployment)
+
+---
+
+## Quick Start
+
+```bash
+# 1. Set your database URL in forge.toml
+#    (uncomment the url line under [database])
+
+# 2. Create the database
+forge db create
+
+# 3. Generate code from your resource schemas
+forge generate
+
+# 4. Create and run the initial migration
+forge migrate diff init
+forge migrate up
+
+# 5. Install dependencies
+go mod tidy
+
+# 6. Start the server
+go run .
+```
+
+Visit `http://localhost:3000/api/docs` for interactive API documentation (Scalar UI).
 
 ## Project Structure
 
-- `resources/` — Resource definitions (schema, handlers, views)
-- `gen/` — Generated code (do not edit)
-- `forge.toml` — Project configuration
+```
+{{.Name}}/
+├── forge.toml                  # Project configuration
+├── main.go                     # Entry point (generated once, safe to edit)
+├── resources/
+│   └── {{.ExampleResource}}/
+│       └── schema.go           # {{.ExampleResourceTitle}} resource definition
+├── gen/                        # Generated code (do not edit)
+│   ├── actions/                # Business logic interfaces and defaults
+│   ├── api/                    # REST API route handlers (Huma)
+│   ├── html/                   # HTML route handlers (Datastar SSE)
+│   ├── models/                 # Go structs, filters, sort types
+│   ├── queries/                # SQL query builders and filters
+│   ├── validation/             # Input validation
+│   ├── errors/                 # Typed error constructors
+│   └── middleware/             # Recovery and other middleware
+└── migrations/                 # Atlas SQL migrations
+```
+
+## How-To Recipes
+
+### Add a new resource
+
+```bash
+# 1. Create the resource directory and schema
+mkdir -p resources/comment
+
+# 2. Create resources/comment/schema.go (see "Defining Resources" below)
+
+# 3. Regenerate code, create migration, apply it
+forge generate
+forge migrate diff add_comments
+forge migrate up
+```
+
+Your new resource instantly gets REST API endpoints, HTML CRUD pages, validation, and query builders.
+
+### Add a custom page
+
+Create a templ component in your resource's `views/` directory and add a handler:
+
+```go
+// resources/post/views/dashboard.templ
+package views
+
+templ Dashboard(stats map[string]int) {
+    <h1>Dashboard</h1>
+    // your markup here
+}
+```
+
+Then register a route in your resource's `handlers.go`:
+
+```go
+// Inside Register<Resource>HTMLRoutes, add:
+r.Get("/dashboard", HandleDashboard())
+```
+
+Wrap the view in the layout to get the full HTML shell:
+
+```go
+func HandleDashboard() http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        layout.Page("Dashboard", views.Dashboard(stats)).Render(r.Context(), w)
+    }
+}
+```
+
+### Add a custom API route
+
+In `main.go`, register additional routes on the Huma API:
+
+```go
+app := forge.New(cfg).
+    RegisterAPIRoutes(func(api huma.API) {
+        genapi.RegisterAllRoutes(api, registry)
+
+        // Add your custom endpoint
+        huma.Get(api, "/api/v1/health", func(ctx context.Context, input *struct{}) (*struct{ Body struct{ Status string } }, error) {
+            return &struct{ Body struct{ Status string } }{Body: struct{ Status string }{Status: "ok"}}, nil
+        })
+    })
+```
+
+### Add authentication
+
+In `main.go`, add one line to require login for all HTML routes:
+
+```go
+app := forge.New(cfg).
+    UsePool(pool).
+    UsePasswordAuth(authenticateUser). // or UseOAuth(...)
+    RequireAuth().                     // redirects unauthenticated users to /auth/login
+    RegisterAPIRoutes(func(api huma.API) {
+        genapi.RegisterAllRoutes(api, registry)
+    }).
+    RegisterHTMLRoutes(func(r chi.Router) {
+        genhtml.RegisterAllHTMLRoutes(r, registry)
+    })
+```
+
+See the [Authentication](#authentication) section for full OAuth and password auth examples.
+
+### Customize business logic for a resource
+
+Embed the default actions and override only what you need:
+
+```go
+type myPostActions struct {
+    actions.DefaultPostActions
+}
+
+func (a *myPostActions) Create(ctx context.Context, input models.PostCreate) (*models.Post, error) {
+    // custom logic before create
+    return a.DefaultPostActions.Create(ctx, input)
+}
+
+// In main.go:
+registry.Register("post", &myPostActions{DefaultPostActions: actions.DefaultPostActions{DB: pool}})
+```
+
+### Run in development mode
+
+```bash
+forge dev
+```
+
+This watches `resources/` for changes and auto-runs `forge generate`, diffs migrations, and applies them. Run `go run .` in a separate terminal to start the server.
+
+## Defining Resources
+
+Resources are defined in `resources/<name>/schema.go` using the Forge schema DSL. Here is the default `{{.ExampleResource}}` resource that was generated with this project:
+
+```go
+package {{.ExampleResource}}
+
+import "github.com/alternayte/forge/schema"
+
+var {{.ExampleResourceTitle}} = schema.Define("{{.ExampleResourceTitle}}",
+    schema.UUID("ID").PrimaryKey(),
+    schema.String("Title").Required().MaxLen(200).Label("Title").Placeholder("Enter title"),
+    schema.Text("Body").Label("Body").Help("Post content"),
+    schema.String("Status").Required().Default("draft"),
+    schema.Timestamps(),
+)
+```
+
+To add a new resource, create a directory and schema file:
+
+```bash
+mkdir -p resources/comment
+```
+
+Then create `resources/comment/schema.go`:
+
+```go
+package comment
+
+import "github.com/alternayte/forge/schema"
+
+var Comment = schema.Define("Comment",
+    schema.UUID("ID").PrimaryKey(),
+    schema.Text("Body").Required().MinLen(1).MaxLen(5000),
+    schema.String("AuthorName").Required().MaxLen(100),
+    schema.Email("AuthorEmail"),
+    schema.Enum("Status", "pending", "approved", "spam").Required().Default("pending"),
+    schema.BelongsTo("Post", "posts").OnDelete(schema.Cascade),
+    schema.Timestamps(),
+    schema.SoftDelete(),
+)
+```
+
+Run `forge generate` to generate all code for the new resource.
+
+### Field Types
+
+| Function           | Go Type          | Postgres Type     | Notes                          |
+|--------------------|------------------|-------------------|--------------------------------|
+| `schema.UUID`      | `uuid.UUID`      | `uuid`            | Use with `.PrimaryKey()`       |
+| `schema.String`    | `string`         | `varchar`         | Use `.MaxLen()` for limit      |
+| `schema.Text`      | `string`         | `text`            | Unlimited length               |
+| `schema.Int`       | `int`            | `integer`         |                                |
+| `schema.BigInt`    | `int64`          | `bigint`          |                                |
+| `schema.Decimal`   | `decimal.Decimal` | `numeric`        |                                |
+| `schema.Bool`      | `bool`           | `boolean`         |                                |
+| `schema.DateTime`  | `time.Time`      | `timestamptz`     |                                |
+| `schema.Date`      | `time.Time`      | `date`            |                                |
+| `schema.Enum`      | `string`         | `enum type`       | Pass allowed values as args    |
+| `schema.JSON`      | `json.RawMessage` | `jsonb`          |                                |
+| `schema.Slug`      | `string`         | `varchar`         | URL-safe identifier            |
+| `schema.Email`     | `string`         | `varchar`         | Validated email format         |
+| `schema.URL`       | `string`         | `varchar`         | Validated URL format           |
+
+### Field Modifiers
+
+Modifiers are chained onto field definitions:
+
+```go
+schema.String("Title").Required().MaxLen(200).Unique().Sortable().Label("Title")
+```
+
+| Modifier                | Effect                                              |
+|-------------------------|-----------------------------------------------------|
+| `.Required()`           | Field is NOT NULL                                   |
+| `.Optional()`           | Field is nullable (default)                         |
+| `.MaxLen(n)`            | Maximum string length                               |
+| `.MinLen(n)`            | Minimum string length                               |
+| `.Default(value)`       | Database default value                              |
+| `.Unique()`             | Unique constraint                                   |
+| `.Index()`              | Database index                                      |
+| `.Sortable()`           | Enables sort-by in list endpoints                   |
+| `.Filterable()`         | Enables filter-by in list endpoints                 |
+| `.Searchable()`         | Included in full-text search                        |
+| `.Immutable()`          | Cannot be changed after creation                    |
+| `.Label("Display")`     | Human-readable label for forms                      |
+| `.Placeholder("...")`   | Placeholder text for form inputs                    |
+| `.Help("...")`          | Help text shown below form inputs                   |
+| `.Visibility("admin")`  | Field only visible to the specified role             |
+| `.Mutability("admin")`  | Field only editable by the specified role            |
+
+### Relationships
+
+```go
+// A comment belongs to a post (adds post_id foreign key)
+schema.BelongsTo("Post", "posts").OnDelete(schema.Cascade)
+
+// A post has many comments
+schema.HasMany("Comments", "comments")
+
+// A user has one profile
+schema.HasOne("Profile", "profiles")
+
+// Optional relationship (nullable foreign key)
+schema.BelongsTo("Category", "categories").Optional()
+```
+
+OnDelete actions: `schema.Cascade`, `schema.SetNull`, `schema.Restrict`, `schema.NoAction`
+
+### Resource Options
+
+```go
+var Product = schema.Define("Product",
+    schema.UUID("ID").PrimaryKey(),
+    schema.String("Name").Required(),
+
+    // Adds created_at and updated_at columns
+    schema.Timestamps(),
+
+    // Adds deleted_at column — records are soft-deleted instead of removed
+    schema.SoftDelete(),
+
+    // Adds created_by, updated_by columns and audit_logs tracking
+    schema.Auditable(),
+
+    // Adds tenant_id column for multi-tenancy
+    schema.TenantScoped(),
+
+    // Enables full-text search indexing
+    schema.Searchable(),
+)
+```
+
+### Permissions
+
+Restrict operations to specific roles:
+
+```go
+var Product = schema.Define("Product",
+    schema.UUID("ID").PrimaryKey(),
+    schema.String("Name").Required(),
+    schema.Timestamps(),
+
+    // Only admins and editors can create/update; anyone can list/read
+    schema.Permission("create", "admin", "editor"),
+    schema.Permission("update", "admin", "editor"),
+    schema.Permission("delete", "admin"),
+)
+```
+
+### Lifecycle Hooks
+
+Enqueue background jobs (via River) after create or update events:
+
+```go
+var Product = schema.Define("Product",
+    schema.UUID("ID").PrimaryKey(),
+    schema.String("Name").Required(),
+    schema.Timestamps(),
+
+    schema.WithHooks(schema.Hooks{
+        AfterCreate: []schema.JobRef{
+            {Kind: "notify_new_product", Queue: "notifications"},
+        },
+        AfterUpdate: []schema.JobRef{
+            {Kind: "reindex_product", Queue: "search"},
+        },
+    }),
+)
+```
+
+## Code Generation
+
+### What `forge generate` produces
+
+Running `forge generate` reads all `resources/*/schema.go` files and generates:
+
+| Directory          | Contents                                        | Overwritten? |
+|--------------------|-------------------------------------------------|--------------|
+| `gen/actions/`     | Actions interfaces, default implementations     | Yes, always  |
+| `gen/api/`         | REST API route handlers (Huma)                  | Yes, always  |
+| `gen/html/`        | HTML route handlers (Datastar SSE)              | Yes, always  |
+| `gen/models/`      | Go structs, create/update inputs, filters, sorts | Yes, always |
+| `gen/queries/`     | SQL query builders and filter mods              | Yes, always  |
+| `gen/validation/`  | Input validation functions                      | Yes, always  |
+| `gen/errors/`      | Typed error constructors                        | Yes, always  |
+| `gen/middleware/`   | Recovery and other middleware                  | Yes, always  |
+| `main.go`          | Application entry point (first run only)        | No, scaffold-once |
+
+**Scaffold-once files** (created if missing, never overwritten):
+- `main.go` — Edit freely to add custom middleware, auth, etc.
+
+**Always-overwritten files** (everything in `gen/`):
+- Never edit files in `gen/` — your changes will be lost on the next `forge generate`.
+
+### Development mode
+
+`forge dev` watches your `resources/` directory for changes and automatically:
+1. Runs `forge generate` when schema files change
+2. Creates the database if it doesn't exist
+3. Diffs and applies migrations when the schema changes
+
+## Available Routes
+
+### API Routes
+
+For each resource (e.g., `{{.ExampleResource}}`), these REST endpoints are generated:
+
+| Method   | Path                               | Description           |
+|----------|------------------------------------|-----------------------|
+| `GET`    | `/api/v1/<resources>`              | List with pagination  |
+| `GET`    | `/api/v1/<resources>/{id}`         | Get by ID             |
+| `POST`   | `/api/v1/<resources>`              | Create                |
+| `PUT`    | `/api/v1/<resources>/{id}`         | Update                |
+| `DELETE` | `/api/v1/<resources>/{id}`         | Delete                |
+
+Additional routes:
+- `GET /api/openapi.json` — OpenAPI 3.1 specification
+- `GET /api/docs` — Interactive API documentation (Scalar UI)
+
+### HTML Routes
+
+For each resource, server-rendered views with Datastar SSE are generated:
+
+| Method   | Path                               | Description                |
+|----------|------------------------------------|----------------------------|
+| `GET`    | `/<resources>`                     | List page                  |
+| `GET`    | `/<resources>/new`                 | New resource form          |
+| `GET`    | `/<resources>/{id}`                | Detail page                |
+| `GET`    | `/<resources>/{id}/edit`           | Edit form                  |
+| `POST`   | `/<resources>`                     | Create (Datastar SSE)      |
+| `PUT`    | `/<resources>/{id}`                | Update (Datastar SSE)      |
+| `DELETE` | `/<resources>/{id}`                | Delete (Datastar SSE)      |
+
+## Custom Business Logic
+
+All business logic flows through an **Actions** interface. Forge generates a default implementation for each resource that handles validation, permissions, and CRUD operations. You can override any method by embedding the default and replacing what you need.
+
+### How the Registry works
+
+The generated `main.go` creates a database pool and passes it to the registry:
+
+```go
+pool, err := forge.ConnectDB(cfg)
+if err != nil {
+    log.Fatal(err)
+}
+defer pool.Close()
+
+registry := genactions.NewDefaultRegistry(pool)
+```
+
+To customize a resource's behavior, create your own actions struct and register it:
+
+```go
+registry := genactions.NewDefaultRegistry(pool)
+registry.Register("{{.ExampleResource}}", &my{{.ExampleResourceTitle}}Actions{DB: pool})
+```
+
+### Overriding a single method
+
+Embed the default actions and override only the methods you need:
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+
+    "{{.Module}}/gen/actions"
+    "{{.Module}}/gen/models"
+)
+
+type my{{.ExampleResourceTitle}}Actions struct {
+    actions.Default{{.ExampleResourceTitle}}Actions
+}
+
+func (a *my{{.ExampleResourceTitle}}Actions) Create(ctx context.Context, input models.{{.ExampleResourceTitle}}Create) (*models.{{.ExampleResourceTitle}}, error) {
+    // Add custom logic before the default create
+    fmt.Println("Creating {{.ExampleResource}}:", input)
+
+    // Call the default implementation
+    return a.Default{{.ExampleResourceTitle}}Actions.Create(ctx, input)
+}
+```
+
+The `Default<Resource>Actions` struct has a `DB` field you can use for direct database queries when needed.
+
+## Authentication
+
+### API Authentication (Bearer Tokens / API Keys)
+
+By default, API routes are public. To enable authentication, provide a `TokenStore` and/or `APIKeyStore` in `main.go`:
+
+```go
+app := forge.New(cfg).
+    UseTokenStore(myTokenStore).
+    UseAPIKeyStore(myAPIKeyStore).
+    RegisterAPIRoutes(func(api huma.API) {
+        genapi.RegisterAllRoutes(api, registry)
+    })
+```
+
+The `TokenStore` interface:
+
+```go
+type TokenStore interface {
+    GetByToken(ctx context.Context, token string) (*Token, error)
+    Create(ctx context.Context, userID uuid.UUID, expiresAt time.Time) (*Token, error)
+    Delete(ctx context.Context, tokenID uuid.UUID) error
+}
+```
+
+The `APIKeyStore` interface:
+
+```go
+type APIKeyStore interface {
+    GetByKey(ctx context.Context, key string) (*APIKey, error)
+    Create(ctx context.Context, userID uuid.UUID, name string, prefix string, scopes []string, expiresAt *time.Time) (*APIKey, error)
+    Revoke(ctx context.Context, keyID uuid.UUID) error
+}
+```
+
+Without stores configured, API requests pass through unauthenticated.
+
+### HTML Authentication (Sessions + OAuth)
+
+HTML routes use session-based authentication backed by PostgreSQL. Sessions are managed automatically — configure auth using builder methods in `main.go`:
+
+**OAuth (Google/GitHub):**
+
+```go
+import "github.com/alternayte/forge/forge/auth"
+
+app := forge.New(cfg).
+    UsePool(pool).
+    UseOAuth(auth.OAuthConfig{
+        Google: struct{ ClientID, ClientSecret string }{
+            ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+            ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+        },
+        GitHub: struct{ ClientID, ClientSecret string }{
+            ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+            ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+        },
+        CallbackBaseURL: "http://localhost:3000",
+        SessionSecret:   os.Getenv("SESSION_SECRET"),
+    }, findOrCreateUser).
+    RequireAuth().
+    RegisterAPIRoutes(func(api huma.API) {
+        genapi.RegisterAllRoutes(api, registry)
+    }).
+    RegisterHTMLRoutes(func(r chi.Router) {
+        genhtml.RegisterAllHTMLRoutes(r, registry)
+    })
+```
+
+**Email/password auth:**
+
+```go
+app := forge.New(cfg).
+    UsePool(pool).
+    UsePasswordAuth(authenticateUser).
+    RequireAuth().
+    // ...
+```
+
+This automatically registers:
+- `GET /auth/login` — Login page
+- `POST /auth/login` — Email/password login (when `UsePasswordAuth` is called)
+- `GET /auth/logout` — Logout
+- `GET /auth/{provider}` — Start OAuth flow (when `UseOAuth` is called)
+- `GET /auth/{provider}/callback` — OAuth callback (when `UseOAuth` is called)
+
+**Password hashing:**
+
+```go
+hash, err := auth.HashPassword("plaintext")
+err := auth.CheckPassword("plaintext", hash)
+```
+
+**Session helpers:**
+
+```go
+auth.LoginUser(sm, r, userID, email)   // Store user in session
+auth.LogoutUser(sm, r)                 // Destroy session
+auth.GetSessionUserID(sm, r)           // Read user ID from session
+auth.GetSessionUserEmail(sm, r)        // Read email from session
+```
+
+**Require login for HTML routes:**
+
+Call `RequireAuth()` on the app builder. Unauthenticated users are redirected to `/auth/login`.
+
+## Database
+
+### Configuration
+
+Set the database URL in `forge.toml`:
+
+```toml
+[database]
+url = "postgres://localhost:5432/{{.Name}}?sslmode=disable"
+```
+
+Or use an environment variable (takes precedence):
+
+```bash
+export FORGE_DATABASE_URL="postgres://user:pass@host:5432/{{.Name}}?sslmode=disable"
+```
+
+### Commands
+
+```bash
+forge db create    # Create the database
+forge db drop      # Drop the database
+forge db reset     # Drop and recreate
+forge db console   # Open psql shell
+forge db seed      # Run seed file
+```
+
+### Migrations
+
+Forge uses [Atlas](https://atlasgo.io) for migrations:
+
+```bash
+forge migrate diff <name>   # Generate a migration from schema changes
+forge migrate up            # Apply pending migrations
+forge migrate down          # Roll back the last migration
+forge migrate status        # Show migration status
+```
+
+Typical workflow after changing a schema:
+
+```bash
+# Edit resources/comment/schema.go
+forge generate
+forge migrate diff add_comment_status
+forge migrate up
+```
+
+## Configuration Reference
+
+Full `forge.toml` with all available sections:
+
+```toml
+[project]
+name = "{{.Name}}"
+module = "{{.Module}}"
+# version = "0.1.0"
+
+[database]
+# url = "postgres://localhost:5432/{{.Name}}?sslmode=disable"
+
+[server]
+# port = 3000
+# host = "localhost"
+
+[session]
+# secret = ""           # HMAC signing key for sessions
+# secure = false         # true in production (HTTPS only)
+# lifetime = "24h"
+
+[jobs]
+# enabled = false
+# [jobs.queues]
+# notifications = 5      # queue_name = max_workers
+# search = 3
+
+[sse]
+# max_total_connections = 5000
+# max_per_user = 10
+# buffer_size = 32
+
+[api.rate_limit]
+# enabled = true
+# [api.rate_limit.default]
+# tokens = 100
+# interval = "1m"
+# [api.rate_limit.authenticated]
+# tokens = 1000
+# interval = "1m"
+
+[api.cors]
+# enabled = true
+# allowed_origins = ["*"]
+# allowed_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+# allow_credentials = false
+
+[telemetry]
+# otlp_endpoint = ""     # empty = stdout in dev
+# log_level = "info"     # debug, info, warn, error
+# log_format = "text"    # json or text
+
+[admin]
+# port = 9090
+
+[tools]
+# templ_version = "0.2.793"
+# sqlc_version = "1.27.0"
+# tailwind_version = "3.4.17"
+# atlas_version = "0.29.0"
+```
+
+### Environment Variable Overrides
+
+Environment variables always take precedence over `forge.toml`:
+
+| Variable                          | Overrides                       |
+|-----------------------------------|---------------------------------|
+| `FORGE_DATABASE_URL`              | `[database] url`                |
+| `FORGE_SERVER_PORT`               | `[server] port`                 |
+| `FORGE_SERVER_HOST`               | `[server] host`                 |
+| `FORGE_SESSION_SECRET`            | `[session] secret`              |
+| `FORGE_JOBS_ENABLED`              | `[jobs] enabled`                |
+| `FORGE_SSE_MAX_TOTAL_CONNECTIONS` | `[sse] max_total_connections`   |
+| `FORGE_SSE_MAX_PER_USER`          | `[sse] max_per_user`            |
+| `FORGE_OTEL_ENDPOINT`             | `[telemetry] otlp_endpoint`     |
+| `FORGE_LOG_LEVEL`                 | `[telemetry] log_level`         |
+| `FORGE_LOG_FORMAT`                | `[telemetry] log_format`        |
+| `FORGE_ADMIN_PORT`                | `[admin] port`                  |
+| `FORGE_ENV=production`            | Forces `log_format = "json"`    |
+
+## Testing
+
+The `forge/forgetest` package provides test infrastructure:
+
+```go
+package myapp_test
+
+import (
+    "net/http"
+    "testing"
+
+    "github.com/alternayte/forge/forge/forgetest"
+)
+
+func TestCreatePost(t *testing.T) {
+    // Create an isolated test database with migrations applied
+    pool := forgetest.NewTestPool(t)
+    defer pool.Close()
+
+    // Create a test HTTP server
+    srv := forgetest.NewApp(t, myRouter)
+
+    // Make API requests against the test server
+    resp, err := http.Post(
+        forgetest.AppURL(srv, "/api/v1/posts"),
+        "application/json",
+        strings.NewReader(`{"title": "Test", "body": "Hello", "status": "draft"}`),
+    )
+    if err != nil {
+        t.Fatal(err)
+    }
+    if resp.StatusCode != http.StatusCreated {
+        t.Errorf("expected 201, got %d", resp.StatusCode)
+    }
+}
+```
+
+`NewTestPool` creates an isolated PostgreSQL database per test using [pgtestdb](https://github.com/peterldowns/pgtestdb). The database is automatically dropped when the test completes.
+
+## Development Workflow
+
+```bash
+# Terminal 1: Watch for schema changes and auto-regenerate
+forge dev
+
+# Terminal 2: Run the application
+go run .
+```
+
+When you edit a schema file, `forge dev` will automatically regenerate code, diff migrations, and apply them.
+
+## Deployment
+
+```bash
+# Build a single binary
+go build -o app .
+
+# Run in production
+FORGE_ENV=production \
+FORGE_DATABASE_URL="postgres://user:pass@db:5432/{{.Name}}?sslmode=disable" \
+./app
+```
+
+- `FORGE_ENV=production` forces JSON structured logging
+- `FORGE_DATABASE_URL` configures the production database
+- The server handles graceful shutdown on SIGINT/SIGTERM (10s drain timeout)

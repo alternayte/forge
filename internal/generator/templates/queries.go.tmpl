@@ -8,7 +8,9 @@ import (
 	"context"
 	forgeauth "github.com/alternayte/forge/forge/auth"
 	{{- end}}
+	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/dialect"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
 
@@ -21,24 +23,24 @@ type {{$resource}}Filters struct{}
 {{- if isFilterable .Modifiers}}
 
 // {{.Name}}EQ returns a query mod for filtering by {{.Name}} equals.
-func (f {{$resource}}Filters) {{.Name}}EQ(val {{goType .Type}}) sm.QueryMod[*psql.SelectQuery] {
+func (f {{$resource}}Filters) {{.Name}}EQ(val {{goType .Type}}) bob.Mod[*dialect.SelectQuery] {
 	return sm.Where(psql.Quote("{{snake .Name}}").EQ(psql.Arg(val)))
 }
 
 // {{.Name}}NEQ returns a query mod for filtering by {{.Name}} not equals.
-func (f {{$resource}}Filters) {{.Name}}NEQ(val {{goType .Type}}) sm.QueryMod[*psql.SelectQuery] {
+func (f {{$resource}}Filters) {{.Name}}NEQ(val {{goType .Type}}) bob.Mod[*dialect.SelectQuery] {
 	return sm.Where(psql.Quote("{{snake .Name}}").NE(psql.Arg(val)))
 }
 
 {{- if or (eq .Type "Int") (eq .Type "BigInt") (eq .Type "Decimal") (eq .Type "DateTime") (eq .Type "Date")}}
 
 // {{.Name}}GTE returns a query mod for filtering by {{.Name}} greater than or equal.
-func (f {{$resource}}Filters) {{.Name}}GTE(val {{goType .Type}}) sm.QueryMod[*psql.SelectQuery] {
+func (f {{$resource}}Filters) {{.Name}}GTE(val {{goType .Type}}) bob.Mod[*dialect.SelectQuery] {
 	return sm.Where(psql.Quote("{{snake .Name}}").GTE(psql.Arg(val)))
 }
 
 // {{.Name}}LTE returns a query mod for filtering by {{.Name}} less than or equal.
-func (f {{$resource}}Filters) {{.Name}}LTE(val {{goType .Type}}) sm.QueryMod[*psql.SelectQuery] {
+func (f {{$resource}}Filters) {{.Name}}LTE(val {{goType .Type}}) bob.Mod[*dialect.SelectQuery] {
 	return sm.Where(psql.Quote("{{snake .Name}}").LTE(psql.Arg(val)))
 }
 {{- end}}
@@ -46,25 +48,24 @@ func (f {{$resource}}Filters) {{.Name}}LTE(val {{goType .Type}}) sm.QueryMod[*ps
 {{- if or (eq .Type "String") (eq .Type "Text") (eq .Type "Email") (eq .Type "URL") (eq .Type "Slug")}}
 
 // {{.Name}}Contains returns a query mod for filtering by {{.Name}} contains (case-insensitive).
-func (f {{$resource}}Filters) {{.Name}}Contains(val string) sm.QueryMod[*psql.SelectQuery] {
+func (f {{$resource}}Filters) {{.Name}}Contains(val string) bob.Mod[*dialect.SelectQuery] {
 	return sm.Where(psql.Quote("{{snake .Name}}").ILike(psql.Arg("%" + val + "%")))
 }
 {{- end}}
 {{- end}}
 {{- end}}
 
-// FilterMods converts a {{$resource}}Filter to a slice of Bob query mods.
-func FilterMods(filter models.{{$resource}}Filter) []sm.QueryMod[*psql.SelectQuery] {
-	var mods []sm.QueryMod[*psql.SelectQuery]
-	filters := {{$resource}}Filters{}
+// {{$resource}}FilterMods converts a {{$resource}}Filter to a slice of Bob query mods.
+func {{$resource}}FilterMods(filter models.{{$resource}}Filter) []bob.Mod[*dialect.SelectQuery] {
+	var mods []bob.Mod[*dialect.SelectQuery]
 
 	{{- range .Fields}}
 	{{- if isFilterable .Modifiers}}
 	if filter.{{.Name}} != nil {
-		mods = append(mods, filters.{{.Name}}EQ(*filter.{{.Name}}))
+		mods = append(mods, ({{$resource}}Filters{}).{{.Name}}EQ(*filter.{{.Name}}))
 	}
 	if filter.{{.Name}}Neq != nil {
-		mods = append(mods, filters.{{.Name}}NEQ(*filter.{{.Name}}Neq))
+		mods = append(mods, ({{$resource}}Filters{}).{{.Name}}NEQ(*filter.{{.Name}}Neq))
 	}
 	{{- end}}
 	{{- end}}
@@ -72,8 +73,8 @@ func FilterMods(filter models.{{$resource}}Filter) []sm.QueryMod[*psql.SelectQue
 	return mods
 }
 
-// SortMod converts a {{$resource}}Sort to a Bob query mod.
-func SortMod(sort models.{{$resource}}Sort) sm.QueryMod[*psql.SelectQuery] {
+// {{$resource}}SortMod converts a {{$resource}}Sort to a Bob query mod.
+func {{$resource}}SortMod(sort models.{{$resource}}Sort) bob.Mod[*dialect.SelectQuery] {
 	var columnName string
 
 	// Map field name to column name
@@ -86,7 +87,7 @@ func SortMod(sort models.{{$resource}}Sort) sm.QueryMod[*psql.SelectQuery] {
 	{{- end}}
 	default:
 		// Invalid field, return no-op mod
-		return sm.QueryMod[*psql.SelectQuery]{}
+		return bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {})
 	}
 
 	// Build order by mod
@@ -100,12 +101,12 @@ func SortMod(sort models.{{$resource}}Sort) sm.QueryMod[*psql.SelectQuery] {
 
 // ActiveMod returns a query mod that excludes soft-deleted records.
 // Applied by default to List and Get queries.
-func (f {{$resource}}Filters) ActiveMod() sm.QueryMod[*psql.SelectQuery] {
+func (f {{$resource}}Filters) ActiveMod() bob.Mod[*dialect.SelectQuery] {
 	return sm.Where(psql.Quote("deleted_at").IsNull())
 }
 
 // OnlyTrashedMod returns a query mod that shows only soft-deleted records.
-func (f {{$resource}}Filters) OnlyTrashedMod() sm.QueryMod[*psql.SelectQuery] {
+func (f {{$resource}}Filters) OnlyTrashedMod() bob.Mod[*dialect.SelectQuery] {
 	return sm.Where(psql.Quote("deleted_at").IsNotNull())
 }
 {{- end}}
@@ -113,7 +114,7 @@ func (f {{$resource}}Filters) OnlyTrashedMod() sm.QueryMod[*psql.SelectQuery] {
 
 // TenantMod scopes the query to the current tenant from context.
 // Panics if tenant ID is not in context — ensure TenantMiddleware is applied.
-func (f {{$resource}}Filters) TenantMod(ctx context.Context) sm.QueryMod[*psql.SelectQuery] {
+func (f {{$resource}}Filters) TenantMod(ctx context.Context) bob.Mod[*dialect.SelectQuery] {
 	tenantID, ok := forgeauth.TenantFromContext(ctx)
 	if !ok {
 		panic("{{$resource}}: tenant ID required in context — is TenantMiddleware applied?")

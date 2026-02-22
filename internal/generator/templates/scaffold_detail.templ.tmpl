@@ -20,7 +20,7 @@ templ {{.Resource.Name}}Detail({{lower .Resource.Name}} *models.{{.Resource.Name
 			</dl>
 			<div class="mt-6 flex gap-4">
 				<a
-					href="/{{kebab (plural .Resource.Name)}}/{ fmt.Sprint({{lower .Resource.Name}}.ID) }/edit"
+					href={ templ.SafeURL(fmt.Sprintf("/{{kebab (plural .Resource.Name)}}/%s/edit", fmt.Sprint({{lower .Resource.Name}}.ID))) }
 					class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
 				>Edit</a>
 				<a

@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -63,7 +64,8 @@ func MapDBError(err error) error {
 	return InternalError(err)
 }
 
-// IsNotFound checks if an error is a sql.ErrNoRows error.
+// IsNotFound checks if an error is a "no rows" error from either database/sql
+// or pgx. pgx.CollectOneRow returns pgx.ErrNoRows, not sql.ErrNoRows.
 func IsNotFound(err error) bool {
-	return errors.Is(err, sql.ErrNoRows)
+	return errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows)
 }

@@ -8,15 +8,25 @@ import (
 	"encoding/json"
 	"reflect"
 {{- end}}
-{{- if or (hasAnyPermission .Options) (hasAnyVisibility .Fields) (.Options.Auditable) (hasHooks .Options)}}
-	forgeauth "github.com/alternayte/forge/forge/auth"
-{{- end}}
-{{- if hasHooks .Options}}
-	"github.com/jackc/pgx/v5"
-	"github.com/riverqueue/river"
+	"fmt"
+	"strings"
+{{- if .HasTimestamps}}
+	"time"
 {{- end}}
 
+{{- if or (hasAnyPermission .Options) (hasAnyVisibility .Fields) (.Options.Auditable) (hasHooks .Options) (.Options.TenantScoped)}}
+	forgeauth "github.com/alternayte/forge/forge/auth"
+{{- end}}
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+{{- if hasHooks .Options}}
+	"github.com/riverqueue/river"
+{{- end}}
+	"github.com/stephenafamo/bob"
+	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/dialect"
+	"github.com/stephenafamo/bob/dialect/psql/sm"
+
 	"{{.ProjectModule}}/gen/errors"
 	"{{.ProjectModule}}/gen/models"
 	"{{.ProjectModule}}/gen/queries"
@@ -94,17 +104,58 @@ func (a *Default{{.Name}}Actions) List(ctx context.Context, filter models.{{.Nam
 	// Exclude soft-deleted records by default (DATA-06)
 	filterMods = append(filterMods, queries.{{.Name}}Filters{}.ActiveMod())
 {{- end}}
+{{- if .Options.TenantScoped}}
+	filterMods = append(filterMods, queries.{{.Name}}Filters{}.TenantMod(ctx))
+{{- end}}
 
 	// Build sort mod
 	sortMod := queries.{{.Name}}SortMod(sort)
 
-	// TODO: Execute Bob query with filterMods and sortMod
-	// This will be implemented when Bob query execution layer is complete.
-	// For now, return empty results to maintain compilable interface.
-	_ = filterMods
-	_ = sortMod
+	// Count query — same filters, no sort/pagination
+	countMods := []bob.Mod[*dialect.SelectQuery]{
+		sm.Columns(psql.Raw("COUNT(*)")),
+		sm.From(psql.Quote("{{plural (snake .Name)}}")),
+	}
+	countMods = append(countMods, filterMods...)
+	countQuery := psql.Select(countMods...)
+	countSQL, countArgs, err := countQuery.Build(ctx)
+	if err != nil {
+		return nil, 0, errors.InternalError(err)
+	}
 
-	return []models.{{.Name}}{}, 0, nil
+	var total int64
+	if err := a.DB.QueryRow(ctx, countSQL, countArgs...).Scan(&total); err != nil {
+		return nil, 0, errors.MapDBError(err)
+	}
+
+	if total == 0 {
+		return []models.{{.Name}}{}, 0, nil
+	}
+
+	// Data query with sort and pagination
+	dataMods := []bob.Mod[*dialect.SelectQuery]{
+		sm.From(psql.Quote("{{plural (snake .Name)}}")),
+	}
+	dataMods = append(dataMods, filterMods...)
+	dataMods = append(dataMods, sortMod)
+	dataMods = append(dataMods, queries.OffsetPaginationMods(page, pageSize)...)
+
+	dataQuery := psql.Select(dataMods...)
+	dataSQL, dataArgs, err := dataQuery.Build(ctx)
+	if err != nil {
+		return nil, 0, errors.InternalError(err)
+	}
+
+	rows, err := a.DB.Query(ctx, dataSQL, dataArgs...)
+	if err != nil {
+		return nil, 0, errors.MapDBError(err)
+	}
+	items, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.{{.Name}}])
+	if err != nil {
+		return nil, 0, errors.MapDBError(err)
+	}
+
+	return items, total, nil
 }
 
 // Get retrieves a single {{.Name}} by ID.
@@ -114,16 +165,29 @@ func (a *Default{{.Name}}Actions) Get(ctx context.Context, id uuid.UUID) (*model
 		return nil, err
 	}
 {{- end}}
-{{- if .Options.SoftDelete}}
-	// Note: Get excludes soft-deleted records. Use a custom action override with
-	// OnlyTrashedMod or no ActiveMod filter for admin restore views.
+{{- if .Options.TenantScoped}}
+	tenantID, _ := forgeauth.TenantFromContext(ctx)
+	rows, err := a.DB.Query(ctx,
+		`SELECT * FROM {{plural (snake .Name)}} WHERE id = $1{{if .Options.SoftDelete}} AND deleted_at IS NULL{{end}} AND tenant_id = $2`,
+		id, tenantID,
+	)
+{{- else}}
+	rows, err := a.DB.Query(ctx,
+		`SELECT * FROM {{plural (snake .Name)}} WHERE id = $1{{if .Options.SoftDelete}} AND deleted_at IS NULL{{end}}`,
+		id,
+	)
 {{- end}}
-	// TODO: Execute Bob query to fetch by ID
-	// This will be implemented when Bob query execution layer is complete.
-	// For now, return not found error to maintain compilable interface.
-	_ = id
-
-	return nil, errors.NotFound("{{.Name}}", id.String())
+	if err != nil {
+		return nil, errors.MapDBError(err)
+	}
+	item, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[models.{{.Name}}])
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, errors.NotFound("{{.Name}}", id.String())
+		}
+		return nil, errors.MapDBError(err)
+	}
+	return &item, nil
 }
 
 // Create creates a new {{.Name}} after validation.
@@ -139,21 +203,65 @@ func (a *Default{{.Name}}Actions) Create(ctx context.Context, input models.{{.Na
 		return nil, errors.NewValidationError(valErrs)
 	}
 
+	// Build INSERT columns and args
+	newID := uuid.New()
+	cols := []string{"id"}
+	args := []any{newID}
+{{- if .Options.TenantScoped}}
+	tenantID, _ := forgeauth.TenantFromContext(ctx)
+	cols = append(cols, "tenant_id")
+	args = append(args, tenantID)
+{{- end}}
+{{- range .Fields}}
+{{- if not (isIDField .)}}
+	cols = append(cols, "{{snake .Name}}")
+	args = append(args, input.{{.Name}})
+{{- end}}
+{{- end}}
+{{- if .HasTimestamps}}
+	now := time.Now()
+	cols = append(cols, "created_at", "updated_at")
+	args = append(args, now, now)
+{{- end}}
+{{- if .Options.Auditable}}
+	userID := forgeauth.UserFromContext(ctx)
+	var userIDPtr *uuid.UUID
+	if userID != (uuid.UUID{}) {
+		userIDPtr = &userID
+	}
+	cols = append(cols, "created_by", "updated_by")
+	args = append(args, userIDPtr, userIDPtr)
+{{- end}}
+
+	placeholders := make([]string, len(args))
+	for i := range placeholders {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+	}
+	insertSQL := fmt.Sprintf(
+		`INSERT INTO {{plural (snake .Name)}} (%s) VALUES (%s) RETURNING *`,
+		strings.Join(cols, ", "),
+		strings.Join(placeholders, ", "),
+	)
+
 {{- if .Options.Hooks.AfterCreate}}
 	// Transactional create with AfterCreate job hooks (JOBS-02)
 	var result *models.{{.Name}}
 	err := pgx.BeginFunc(ctx, a.DB, func(tx pgx.Tx) error {
-		// TODO: Execute Bob insert via tx (replace when Bob is wired)
-		_ = tx
-		if result == nil {
-			return errors.InternalError("Create not yet implemented")
+		txRows, qErr := tx.Query(ctx, insertSQL, args...)
+		if qErr != nil {
+			return errors.MapDBError(qErr)
 		}
+		item, qErr := pgx.CollectOneRow(txRows, pgx.RowToStructByName[models.{{.Name}}])
+		if qErr != nil {
+			return errors.MapDBError(qErr)
+		}
+		result = &item
 		{{- range .Options.Hooks.AfterCreate}}
 		// Enqueue {{.Kind}} job in same transaction (JOBS-02)
-		tenantID, _ := forgeauth.TenantFromContext(ctx)
+		hookTenantID, _ := forgeauth.TenantFromContext(ctx)
 		if _, enqErr := a.River.InsertTx(ctx, tx, {{pascal .Kind}}Args{
 			ResourceID: result.ID,
-			TenantID:   tenantID,
+			TenantID:   hookTenantID,
 		}, &river.InsertOpts{ {{- if .Queue}}Queue: "{{.Queue}}",{{end}} }); enqErr != nil {
 			return enqErr
 		}
@@ -162,15 +270,15 @@ func (a *Default{{.Name}}Actions) Create(ctx context.Context, input models.{{.Na
 	})
 	return result, err
 {{- else}}
-	// TODO: Execute Bob insert query
-	// This will be implemented when Bob query execution layer is complete.
-	// For now, return internal error to maintain compilable interface.
-{{- if .Options.Auditable}}
-	// Note: When Bob insert is wired, set created_by from forgeauth.UserFromContext(ctx)
-	// on the insert payload before executing the query (AUDIT-01).
-{{- end}}
-
-	return nil, errors.InternalError("Create not yet implemented")
+	rows, err := a.DB.Query(ctx, insertSQL, args...)
+	if err != nil {
+		return nil, errors.MapDBError(err)
+	}
+	item, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[models.{{.Name}}])
+	if err != nil {
+		return nil, errors.MapDBError(err)
+	}
+	return &item, nil
 {{- end}}
 }
 
@@ -192,22 +300,80 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 	beforeItem, _ := a.Get(ctx, id)
 {{- end}}
 
+	// Build dynamic SET clause from non-nil fields
+	setClauses := []string{}
+	updateArgs := []any{}
+	argN := 1
+{{- range .Fields}}
+{{- if not (isIDField .)}}
+	if input.{{.Name}} != nil {
+		setClauses = append(setClauses, fmt.Sprintf("{{snake .Name}} = $%d", argN))
+		updateArgs = append(updateArgs, *input.{{.Name}})
+		argN++
+	}
+{{- end}}
+{{- end}}
+{{- if .HasTimestamps}}
+	setClauses = append(setClauses, fmt.Sprintf("updated_at = $%d", argN))
+	updateArgs = append(updateArgs, time.Now())
+	argN++
+{{- end}}
+{{- if .Options.Auditable}}
+	auditUserID := forgeauth.UserFromContext(ctx)
+	if auditUserID != (uuid.UUID{}) {
+		setClauses = append(setClauses, fmt.Sprintf("updated_by = $%d", argN))
+		updateArgs = append(updateArgs, auditUserID)
+		argN++
+	}
+{{- end}}
+
+	// No fields to update — return current state
+	if len(setClauses) == 0 {
+		return a.Get(ctx, id)
+	}
+
+	// Build WHERE clause
+	updateArgs = append(updateArgs, id)
+	whereClause := fmt.Sprintf("id = $%d", argN)
+	argN++
+{{- if .Options.SoftDelete}}
+	whereClause += " AND deleted_at IS NULL"
+{{- end}}
+{{- if .Options.TenantScoped}}
+	updateTenantID, _ := forgeauth.TenantFromContext(ctx)
+	updateArgs = append(updateArgs, updateTenantID)
+	whereClause += fmt.Sprintf(" AND tenant_id = $%d", argN)
+	argN++
+{{- end}}
+
+	updateSQL := fmt.Sprintf(
+		`UPDATE {{plural (snake .Name)}} SET %s WHERE %s RETURNING *`,
+		strings.Join(setClauses, ", "),
+		whereClause,
+	)
+
 {{- if .Options.Hooks.AfterUpdate}}
 	// Transactional update with AfterUpdate job hooks (JOBS-02)
 	var item *models.{{.Name}}
 	err := pgx.BeginFunc(ctx, a.DB, func(tx pgx.Tx) error {
-		// TODO: Execute Bob update via tx (replace when Bob is wired)
-		_ = tx
-		_ = id
-		if item == nil {
-			return errors.NotFound("{{.Name}}", id.String())
+		txRows, qErr := tx.Query(ctx, updateSQL, updateArgs...)
+		if qErr != nil {
+			return errors.MapDBError(qErr)
 		}
+		updated, qErr := pgx.CollectOneRow(txRows, pgx.RowToStructByName[models.{{.Name}}])
+		if qErr != nil {
+			if errors.IsNotFound(qErr) {
+				return errors.NotFound("{{.Name}}", id.String())
+			}
+			return errors.MapDBError(qErr)
+		}
+		item = &updated
 		{{- range .Options.Hooks.AfterUpdate}}
 		// Enqueue {{.Kind}} job in same transaction (JOBS-02)
-		tenantID, _ := forgeauth.TenantFromContext(ctx)
+		hookTenantID, _ := forgeauth.TenantFromContext(ctx)
 		if _, enqErr := a.River.InsertTx(ctx, tx, {{pascal .Kind}}Args{
 			ResourceID: item.ID,
-			TenantID:   tenantID,
+			TenantID:   hookTenantID,
 		}, &river.InsertOpts{ {{- if .Queue}}Queue: "{{.Queue}}",{{end}} }); enqErr != nil {
 			return enqErr
 		}
@@ -225,25 +391,27 @@ func (a *Default{{.Name}}Actions) Update(ctx context.Context, id uuid.UUID, inpu
 {{- end}}
 	return item, err
 {{- else}}
-	// TODO: Execute Bob update query
-	// This will be implemented when Bob query execution layer is complete.
-	// For now, return not found error to maintain compilable interface.
-	_ = id
-
-	// TODO: Replace placeholder item below with the actual updated record from Bob query
-	var item *models.{{.Name}}
-
+	rows, err := a.DB.Query(ctx, updateSQL, updateArgs...)
+	if err != nil {
+		return nil, errors.MapDBError(err)
+	}
+	item, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[models.{{.Name}}])
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, errors.NotFound("{{.Name}}", id.String())
+		}
+		return nil, errors.MapDBError(err)
+	}
 {{- if .Options.Auditable}}
 	// Record update in audit log with JSONB diff (AUDIT-02)
 	// No-op updates produce empty diff — no audit entry (AUDIT-03)
-	if beforeItem != nil && item != nil {
-		if err := a.recordAudit(ctx, "update", id, beforeItem, item); err != nil {
-			_ = err // Log but don't fail the update
+	if beforeItem != nil {
+		if auditErr := a.recordAudit(ctx, "update", id, beforeItem, &item); auditErr != nil {
+			_ = auditErr // Log but don't fail the update
 		}
 	}
 {{- end}}
-
-	return nil, errors.NotFound("{{.Name}}", id.String())
+	return &item, nil
 {{- end}}
 }
 
@@ -262,7 +430,7 @@ func (a *Default{{.Name}}Actions) Delete(ctx context.Context, id uuid.UUID) erro
 		id,
 	)
 	if err != nil {
-		return errors.InternalError("failed to soft-delete {{.Name}}")
+		return errors.InternalError(fmt.Errorf("failed to soft-delete {{.Name}}"))
 	}
 {{- if .Options.Auditable}}
 	// Record soft-delete in audit log (AUDIT-02)
@@ -271,9 +439,25 @@ func (a *Default{{.Name}}Actions) Delete(ctx context.Context, id uuid.UUID) erro
 	return nil
 {{- else}}
 	// Hard delete
-	// TODO: Execute Bob delete query
-	_ = id
-	return errors.NotFound("{{.Name}}", id.String())
+{{- if .Options.TenantScoped}}
+	delTenantID, _ := forgeauth.TenantFromContext(ctx)
+	result, err := a.DB.Exec(ctx,
+		`DELETE FROM {{plural (snake .Name)}} WHERE id = $1 AND tenant_id = $2`,
+		id, delTenantID,
+	)
+{{- else}}
+	result, err := a.DB.Exec(ctx,
+		`DELETE FROM {{plural (snake .Name)}} WHERE id = $1`,
+		id,
+	)
+{{- end}}
+	if err != nil {
+		return errors.MapDBError(err)
+	}
+	if result.RowsAffected() == 0 {
+		return errors.NotFound("{{.Name}}", id.String())
+	}
+	return nil
 {{- end}}
 }
 {{- if .Options.SoftDelete}}
@@ -290,7 +474,7 @@ func (a *Default{{.Name}}Actions) Restore(ctx context.Context, id uuid.UUID) (*m
 		id,
 	)
 	if err != nil {
-		return nil, errors.InternalError("failed to restore {{.Name}}")
+		return nil, errors.InternalError(fmt.Errorf("failed to restore {{.Name}}"))
 	}
 	if result.RowsAffected() == 0 {
 		return nil, errors.NotFound("{{.Name}}", id.String())

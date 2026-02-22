@@ -69,6 +69,16 @@ func TestGeneratePagination(t *testing.T) {
 		}
 	}
 
+	// Verify dialect import for correct SelectQuery type
+	if !strings.Contains(contentStr, `"github.com/stephenafamo/bob/dialect/psql/dialect"`) {
+		t.Error("Generated pagination.go should import Bob dialect package for dialect.SelectQuery type")
+	}
+
+	// Verify dialect.SelectQuery is used instead of psql.SelectQuery
+	if !strings.Contains(contentStr, "*dialect.SelectQuery") {
+		t.Error("Generated pagination.go should use *dialect.SelectQuery, not *psql.SelectQuery")
+	}
+
 	// Verify generated code is valid Go (formatGoSource would have failed if not)
 	if !strings.HasPrefix(contentStr, "// Code generated") {
 		t.Error("Generated file missing DO NOT EDIT header")

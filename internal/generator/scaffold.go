@@ -30,6 +30,7 @@ func scaffoldFiles(resource parser.ResourceIR) []scaffoldFile {
 		{Template: "templates/scaffold_form.templ.tmpl", OutputPath: "views/form.templ", IsTempl: true},
 		{Template: "templates/scaffold_list.templ.tmpl", OutputPath: "views/list.templ", IsTempl: true},
 		{Template: "templates/scaffold_detail.templ.tmpl", OutputPath: "views/detail.templ", IsTempl: true},
+		{Template: "templates/scaffold_error.templ.tmpl", OutputPath: "views/error.templ", IsTempl: true},
 		{Template: "templates/scaffold_handlers.go.tmpl", OutputPath: "handlers.go", IsTempl: false},
 		{Template: "templates/scaffold_hooks.go.tmpl", OutputPath: "hooks.go", IsTempl: false},
 	}

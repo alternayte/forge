@@ -16,8 +16,17 @@ import (
 
 // DownloadTool downloads a tool binary from the registry.
 func DownloadTool(tool ToolDef, platform Platform, destDir string, progress func(pct float64)) error {
+	// Apply OS/Arch mappings for tools that use non-standard platform names
+	mappedPlatform := platform
+	if mapped, ok := tool.OSMap[mappedPlatform.OS]; ok {
+		mappedPlatform.OS = mapped
+	}
+	if mapped, ok := tool.ArchMap[mappedPlatform.Arch]; ok {
+		mappedPlatform.Arch = mapped
+	}
+
 	// Construct URL from template
-	url, err := constructURL(tool.URLTemplate, platform, tool.Version)
+	url, err := constructURL(tool.URLTemplate, mappedPlatform, tool.Version)
 	if err != nil {
 		return fmt.Errorf("construct URL: %w", err)
 	}

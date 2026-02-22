@@ -11,10 +11,11 @@ import (
 
 // TestGenerateAtlasSchema_ProductTable tests end-to-end Atlas schema generation.
 func TestGenerateAtlasSchema_ProductTable(t *testing.T) {
-	// Create a sample Product resource
+	// Create a sample Product resource (includes ID field as parser produces it)
 	product := parser.ResourceIR{
 		Name: "Product",
 		Fields: []parser.FieldIR{
+			{Name: "ID", Type: "UUID", Modifiers: []parser.ModifierIR{{Type: "PrimaryKey"}}},
 			{Name: "Name", Type: "String", Modifiers: []parser.ModifierIR{{Type: "Required"}}},
 			{Name: "Description", Type: "Text"},
 			{Name: "Price", Type: "Decimal", Modifiers: []parser.ModifierIR{{Type: "Required"}}},
@@ -63,9 +64,12 @@ func TestGenerateAtlasSchema_ProductTable(t *testing.T) {
 		t.Error("Generated file missing table 'products'")
 	}
 
-	// Verify id column with UUID type
+	// Verify id column with UUID type (must appear exactly once — not duplicated)
 	if !strings.Contains(contentStr, `column "id"`) {
 		t.Error("Generated file missing id column")
+	}
+	if strings.Count(contentStr, `column "id"`) != 1 {
+		t.Errorf("id column declared %d times, want exactly 1", strings.Count(contentStr, `column "id"`))
 	}
 	if !strings.Contains(contentStr, "type    = uuid") {
 		t.Error("Generated file missing uuid type for id")

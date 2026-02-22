@@ -17,6 +17,22 @@ func GenerateHTML(resources []parser.ResourceIR, outputDir, projectModule string
 		ProjectModule: projectModule,
 	}
 
+	// Generate gen/html/layout/layout.templ
+	layoutDir := filepath.Join(outputDir, "html", "layout")
+	if err := ensureDir(layoutDir); err != nil {
+		return err
+	}
+
+	layoutRaw, err := renderTemplate("templates/layout.templ.tmpl", data)
+	if err != nil {
+		return err
+	}
+
+	layoutPath := filepath.Join(layoutDir, "layout.templ")
+	if err := writeRawFile(layoutPath, layoutRaw); err != nil {
+		return err
+	}
+
 	// Generate gen/html/primitives/primitives.templ
 	primitivesDir := filepath.Join(outputDir, "html", "primitives")
 	if err := ensureDir(primitivesDir); err != nil {

@@ -45,7 +45,9 @@ func BuildFuncMap() template.FuncMap {
 		"not":                 not,
 		"join":                join,
 		// HTML generation helpers
-		"htmlInputType": htmlInputType,
+		"htmlInputType":  htmlInputType,
+		"formNeedsFmt":   formNeedsFmt,
+		"formNeedsJSON":  formNeedsJSON,
 		// Phase 7: Advanced data feature helpers
 		"hasPermission":          hasPermission,
 		"permissionRoles":        permissionRoles,
@@ -554,6 +556,30 @@ func pascal(s string) string {
 		}
 	}
 	return strings.Join(parts, "")
+}
+
+// formNeedsFmt returns true if any field requires the "fmt" package in the form template.
+// Fields with Visibility or Mutability modifiers use fmt.Sprint for read-only display,
+// and Decimal fields use fmt.Sprint for input value formatting.
+func formNeedsFmt(fields []parser.FieldIR) bool {
+	for _, f := range fields {
+		if hasModifier(f.Modifiers, "Visibility") || hasModifier(f.Modifiers, "Mutability") || f.Type == "Decimal" {
+			return true
+		}
+	}
+	return false
+}
+
+// formNeedsJSON returns true if the form template needs the "encoding/json" import.
+// This is true when there are any non-ID fields, since the signalsJSON helper
+// marshals field values to JSON for Datastar data-signals.
+func formNeedsJSON(fields []parser.FieldIR) bool {
+	for _, f := range fields {
+		if !isIDField(f) {
+			return true
+		}
+	}
+	return false
 }
 
 // htmlInputType maps IR field type strings to HTML input type attributes.

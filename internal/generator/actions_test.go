@@ -159,8 +159,8 @@ func TestGenerateActions(t *testing.T) {
 	if !strings.Contains(productStr, "errors.NotFound") {
 		t.Error("Generated product.go missing errors.NotFound usage")
 	}
-	if !strings.Contains(productStr, "errors.InternalError") {
-		t.Error("Generated product.go missing errors.InternalError usage")
+	if !strings.Contains(productStr, "errors.MapDBError") {
+		t.Error("Generated product.go missing errors.MapDBError usage")
 	}
 
 	// Check query integration
@@ -169,6 +169,29 @@ func TestGenerateActions(t *testing.T) {
 	}
 	if !strings.Contains(productStr, "queries.ProductSortMod(sort)") {
 		t.Error("Generated product.go List method missing sort mod call")
+	}
+
+	// Check real CRUD implementations (not stubs)
+	if !strings.Contains(productStr, "pgx.CollectOneRow") {
+		t.Error("Generated product.go missing pgx.CollectOneRow for Get/Create/Update")
+	}
+	if !strings.Contains(productStr, "pgx.CollectRows") {
+		t.Error("Generated product.go missing pgx.CollectRows for List")
+	}
+	if !strings.Contains(productStr, "INSERT INTO products") {
+		t.Error("Generated product.go Create missing INSERT INTO SQL")
+	}
+	if !strings.Contains(productStr, "UPDATE products SET") {
+		t.Error("Generated product.go Update missing UPDATE SET SQL")
+	}
+	if !strings.Contains(productStr, "DELETE FROM products") {
+		t.Error("Generated product.go Delete missing DELETE FROM SQL")
+	}
+	if !strings.Contains(productStr, "psql.Select") {
+		t.Error("Generated product.go List missing Bob psql.Select")
+	}
+	if !strings.Contains(productStr, "RETURNING *") {
+		t.Error("Generated product.go Create/Update missing RETURNING *")
 	}
 }
 

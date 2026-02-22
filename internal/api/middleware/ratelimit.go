@@ -14,10 +14,6 @@ import (
 // bucket rate limiting using go-limiter. If config.Enabled is false, a no-op
 // pass-through middleware is returned.
 //
-// Phase 5 note: All requests are rated against the Default tier. Tiered
-// enforcement (authenticated vs API key vs anonymous) will be wired once the
-// full server is assembled in Plan 03, which can inspect auth context values.
-//
 // The middleware automatically sets X-RateLimit-Limit, X-RateLimit-Remaining,
 // and X-RateLimit-Reset response headers. Requests that exceed the limit
 // receive HTTP 429 Too Many Requests.

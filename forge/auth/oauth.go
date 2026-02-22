@@ -119,17 +119,26 @@ func RegisterOAuthRoutes(
 	authenticateUser PasswordAuthenticator,
 ) {
 	router.Group(func(r chi.Router) {
+		// Always register login page and logout.
 		r.Get("/auth/login", HandleLogin(sm))
-		r.Post("/auth/login", HandleLoginSubmit(sm, authenticateUser))
 		r.Get("/auth/logout", HandleLogout(sm))
-		r.Get("/auth/{provider}", gothic.BeginAuthHandler)
-		r.Get("/auth/{provider}/callback", HandleOAuthCallback(sm, findOrCreateUser))
+
+		// Only register password login if authenticateUser is provided.
+		if authenticateUser != nil {
+			r.Post("/auth/login", HandleLoginSubmit(sm, authenticateUser))
+		}
+
+		// Only register OAuth routes if findOrCreateUser is provided.
+		if findOrCreateUser != nil {
+			r.Get("/auth/{provider}", gothic.BeginAuthHandler)
+			r.Get("/auth/{provider}/callback", HandleOAuthCallback(sm, findOrCreateUser))
+		}
 	})
 }
 
 // HandleLogin returns an http.HandlerFunc that renders the login page.
 // The page includes an email/password form and OAuth provider buttons for
-// Google and GitHub. A templ template replaces this inline HTML in Phase 6.
+// Google and GitHub.
 func HandleLogin(sm *scs.SessionManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -179,8 +188,7 @@ func HandleLogout(sm *scs.SessionManager) http.HandlerFunc {
 }
 
 // loginPageHTML returns a minimal HTML login page. The errMsg is displayed
-// when non-empty (e.g. "Invalid email or password."). This inline template
-// will be replaced by a proper templ component in Phase 6.
+// when non-empty (e.g. "Invalid email or password.").
 func loginPageHTML(errMsg string) string {
 	errSection := ""
 	if errMsg != "" {

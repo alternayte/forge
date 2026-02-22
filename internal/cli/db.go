@@ -61,7 +61,7 @@ Example:
 			}
 
 			// Parse database URL
-			host, port, dbName, err := parseDatabaseURL(cfg.Database.URL)
+			host, port, dbName, username, password, err := parseDatabaseURL(cfg.Database.URL)
 			if err != nil {
 				return fmt.Errorf("failed to parse database URL: %w", err)
 			}
@@ -71,7 +71,7 @@ Example:
 			fmt.Println(ui.Header("Creating database..."))
 			fmt.Println()
 
-			if err := createDatabase(host, port, dbName); err != nil {
+			if err := createDatabase(host, port, dbName, username, password); err != nil {
 				return err
 			}
 
@@ -112,7 +112,7 @@ Example:
 			}
 
 			// Parse database URL
-			host, port, dbName, err := parseDatabaseURL(cfg.Database.URL)
+			host, port, dbName, username, password, err := parseDatabaseURL(cfg.Database.URL)
 			if err != nil {
 				return fmt.Errorf("failed to parse database URL: %w", err)
 			}
@@ -122,7 +122,7 @@ Example:
 			fmt.Println(ui.Header("Dropping database..."))
 			fmt.Println()
 
-			if err := dropDatabase(host, port, dbName); err != nil {
+			if err := dropDatabase(host, port, dbName, username, password); err != nil {
 				return err
 			}
 
@@ -261,7 +261,7 @@ Example:
 			}
 
 			// Parse database URL
-			host, port, dbName, err := parseDatabaseURL(cfg.Database.URL)
+			host, port, dbName, username, password, err := parseDatabaseURL(cfg.Database.URL)
 			if err != nil {
 				return fmt.Errorf("failed to parse database URL: %w", err)
 			}
@@ -283,7 +283,7 @@ Example:
 
 			// Step 1: Drop database
 			fmt.Println(ui.Info("  Dropping database..."))
-			if err := dropDatabase(host, port, dbName); err != nil {
+			if err := dropDatabase(host, port, dbName, username, password); err != nil {
 				return err
 			}
 			fmt.Println(ui.Success("  Database dropped"))
@@ -291,7 +291,7 @@ Example:
 
 			// Step 2: Create database
 			fmt.Println(ui.Info("  Creating database..."))
-			if err := createDatabase(host, port, dbName); err != nil {
+			if err := createDatabase(host, port, dbName, username, password); err != nil {
 				return err
 			}
 			fmt.Println(ui.Success("  Database created"))
@@ -342,19 +342,19 @@ Example:
 
 // Helper functions
 
-// parseDatabaseURL extracts host, port, and database name from a PostgreSQL URL.
+// parseDatabaseURL extracts connection parameters from a PostgreSQL URL.
 // Handles both postgres:// and postgresql:// schemes.
-// Example: postgres://localhost:5432/my-app?sslmode=disable -> (localhost, 5432, my-app)
-func parseDatabaseURL(rawURL string) (host, port, dbName string, err error) {
+// Example: postgres://user:pass@localhost:5432/my-app?sslmode=disable -> (localhost, 5432, my-app, user, pass)
+func parseDatabaseURL(rawURL string) (host, port, dbName, username, password string, err error) {
 	// Parse URL
 	u, err := url.Parse(rawURL)
 	if err != nil {
-		return "", "", "", fmt.Errorf("invalid database URL: %w", err)
+		return "", "", "", "", "", fmt.Errorf("invalid database URL: %w", err)
 	}
 
 	// Check scheme
 	if u.Scheme != "postgres" && u.Scheme != "postgresql" {
-		return "", "", "", fmt.Errorf("unsupported database scheme: %s (expected postgres:// or postgresql://)", u.Scheme)
+		return "", "", "", "", "", fmt.Errorf("unsupported database scheme: %s (expected postgres:// or postgresql://)", u.Scheme)
 	}
 
 	// Extract host and port
@@ -371,15 +371,30 @@ func parseDatabaseURL(rawURL string) (host, port, dbName string, err error) {
 	// Extract database name from path (strip leading slash)
 	dbName = strings.TrimPrefix(u.Path, "/")
 	if dbName == "" {
-		return "", "", "", fmt.Errorf("database name not found in URL path")
+		return "", "", "", "", "", fmt.Errorf("database name not found in URL path")
 	}
 
-	return host, port, dbName, nil
+	// Extract username and password
+	if u.User != nil {
+		username = u.User.Username()
+		password, _ = u.User.Password()
+	}
+
+	return host, port, dbName, username, password, nil
 }
 
 // createDatabase creates a PostgreSQL database using the createdb command.
-func createDatabase(host, port, dbName string) error {
-	cmd := exec.Command("createdb", "-h", host, "-p", port, dbName)
+func createDatabase(host, port, dbName, username, password string) error {
+	args := []string{"-h", host, "-p", port}
+	if username != "" {
+		args = append(args, "-U", username)
+	}
+	args = append(args, dbName)
+
+	cmd := exec.Command("createdb", args...)
+	if password != "" {
+		cmd.Env = append(os.Environ(), "PGPASSWORD="+password)
+	}
 	var stderr strings.Builder
 	cmd.Stderr = &stderr
 
@@ -405,8 +420,17 @@ func createDatabase(host, port, dbName string) error {
 }
 
 // dropDatabase drops a PostgreSQL database using the dropdb command.
-func dropDatabase(host, port, dbName string) error {
-	cmd := exec.Command("dropdb", "--if-exists", "-h", host, "-p", port, dbName)
+func dropDatabase(host, port, dbName, username, password string) error {
+	args := []string{"--if-exists", "-h", host, "-p", port}
+	if username != "" {
+		args = append(args, "-U", username)
+	}
+	args = append(args, dbName)
+
+	cmd := exec.Command("dropdb", args...)
+	if password != "" {
+		cmd.Env = append(os.Environ(), "PGPASSWORD="+password)
+	}
 	var stderr strings.Builder
 	cmd.Stderr = &stderr
 

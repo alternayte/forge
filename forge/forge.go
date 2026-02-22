@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -18,17 +21,32 @@ import (
 	"github.com/alternayte/forge/internal/config"
 )
 
+// ConnectDB creates a pgxpool.Pool from the given Config.
+// Call this early in main() so the pool is available for registry wiring.
+func ConnectDB(cfg Config) (*pgxpool.Pool, error) {
+	pool, err := pgxpool.New(context.Background(), cfg.DatabaseURL())
+	if err != nil {
+		return nil, fmt.Errorf("forge: connect to database: %w", err)
+	}
+	return pool, nil
+}
+
 // App is the forge application lifecycle manager.
 // Create with New(), configure with builder methods, start with Listen().
 type App struct {
-	cfg          *config.Config
-	router       chi.Router
-	pool         *pgxpool.Pool
-	apiRoutesFn  func(huma.API)
-	htmlRoutesFn func(chi.Router)
-	recoveryMw   func(http.Handler) http.Handler
-	tokenStore   auth.TokenStore
-	apiKeyStore  auth.APIKeyStore
+	cfg              *config.Config
+	router           chi.Router
+	pool             *pgxpool.Pool
+	apiRoutesFn      func(huma.API)
+	htmlRoutesFn     func(chi.Router)
+	recoveryMw       func(http.Handler) http.Handler
+	tokenStore       auth.TokenStore
+	apiKeyStore      auth.APIKeyStore
+	oauthConfig      *auth.OAuthConfig
+	findOrCreateUser auth.UserFinder
+	authenticateUser auth.PasswordAuthenticator
+	requireAuth      bool
+	publicRoutesFn   func(chi.Router)
 }
 
 // New creates a new App from configuration loaded via LoadConfig.
@@ -72,25 +90,72 @@ func (a *App) UseAPIKeyStore(ks auth.APIKeyStore) *App {
 	return a
 }
 
+// UsePool sets an externally-created database connection pool.
+// When set, Listen() will skip internal pool creation and use this pool instead.
+// The caller is responsible for closing the pool after Listen() returns.
+func (a *App) UsePool(pool *pgxpool.Pool) *App {
+	a.pool = pool
+	return a
+}
+
+// UseOAuth configures OAuth2 providers (Google/GitHub) for HTML session auth.
+func (a *App) UseOAuth(cfg auth.OAuthConfig, findOrCreateUser auth.UserFinder) *App {
+	a.oauthConfig = &cfg
+	a.findOrCreateUser = findOrCreateUser
+	return a
+}
+
+// UsePasswordAuth configures email/password authentication for HTML session auth.
+func (a *App) UsePasswordAuth(authenticateUser auth.PasswordAuthenticator) *App {
+	a.authenticateUser = authenticateUser
+	return a
+}
+
+// RequireAuth enables session enforcement on HTML routes.
+// Unauthenticated users are redirected to /auth/login.
+func (a *App) RequireAuth() *App {
+	a.requireAuth = true
+	return a
+}
+
+// RegisterPublicRoutes sets a function that registers routes outside the
+// RequireSession middleware group. Use this for custom unauthenticated pages.
+func (a *App) RegisterPublicRoutes(fn func(chi.Router)) *App {
+	a.publicRoutesFn = fn
+	return a
+}
+
 // Listen starts the HTTP server and blocks until SIGTERM/SIGINT.
 // On shutdown: stops accepting connections, drains in-flight requests,
-// closes the DB pool.
+// closes the DB pool (if created internally).
 func (a *App) Listen(addr string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// Connect to database
-	pool, err := pgxpool.New(ctx, a.cfg.Database.URL)
-	if err != nil {
-		return fmt.Errorf("forge: connect to database: %w", err)
+	// Connect to database if no external pool was provided via UsePool().
+	if a.pool == nil {
+		pool, err := pgxpool.New(ctx, a.cfg.Database.URL)
+		if err != nil {
+			return fmt.Errorf("forge: connect to database: %w", err)
+		}
+		defer pool.Close()
+		a.pool = pool
 	}
-	defer pool.Close()
-	a.pool = pool
 
 	// Set up session manager.
 	// NOTE: auth.NewSessionManager already sets sm.Store = pgxstore.New(pool) internally.
 	isDev := a.cfg.Server.Host == "localhost"
-	sm := auth.NewSessionManager(pool, isDev)
+	sm := auth.NewSessionManager(a.pool, isDev)
+
+	// Set up OAuth providers if configured.
+	if a.oauthConfig != nil {
+		auth.SetupOAuth(*a.oauthConfig)
+	}
+
+	// Serve static files from public/ directory.
+	// Files in public/ are served at the root path (e.g., public/css/output.css -> /css/output.css).
+	// If the file doesn't exist, the request passes through to application routes.
+	a.router.Use(staticFiles("public"))
 
 	// Recovery middleware fallback
 	recoveryMw := a.recoveryMw
@@ -114,10 +179,12 @@ func (a *App) Listen(addr string) error {
 	}
 
 	// Wire HTML routes
-	if a.htmlRoutesFn != nil {
+	if a.htmlRoutesFn != nil || a.requireAuth || a.findOrCreateUser != nil || a.authenticateUser != nil {
 		err := internalapi.SetupHTML(a.router, internalapi.HTMLServerConfig{
-			SessionManager: sm,
-			RegisterRoutes: a.htmlRoutesFn,
+			SessionManager:       sm,
+			RegisterRoutes:       a.htmlRoutesFn,
+			RequireAuth:          a.requireAuth,
+			RegisterPublicRoutes: a.buildPublicRoutesFn(sm),
 		})
 		if err != nil {
 			return fmt.Errorf("forge: setup HTML: %w", err)
@@ -149,8 +216,52 @@ func (a *App) Listen(addr string) error {
 	return nil
 }
 
+// buildPublicRoutesFn composes auth routes and custom public routes into a
+// single function for the public (unauthenticated) route group.
+func (a *App) buildPublicRoutesFn(sm *scs.SessionManager) func(chi.Router) {
+	if a.findOrCreateUser == nil && a.authenticateUser == nil && a.publicRoutesFn == nil {
+		return nil
+	}
+	return func(r chi.Router) {
+		if a.findOrCreateUser != nil || a.authenticateUser != nil {
+			auth.RegisterOAuthRoutes(r, sm, a.findOrCreateUser, a.authenticateUser)
+		}
+		if a.publicRoutesFn != nil {
+			a.publicRoutesFn(r)
+		}
+	}
+}
+
 // Pool returns the database connection pool.
 // Only valid after Listen() has been called (for test infrastructure, use forge/forgetest).
 func (a *App) Pool() *pgxpool.Pool {
 	return a.pool
+}
+
+// staticFiles returns middleware that serves files from the given directory.
+// If the requested path matches a file on disk, it's served directly.
+// Otherwise the request passes through to the next handler.
+func staticFiles(dir string) func(http.Handler) http.Handler {
+	absDir, _ := filepath.Abs(dir)
+	fs := http.FileServer(http.Dir(absDir))
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Only serve GET/HEAD for static files
+			if r.Method != http.MethodGet && r.Method != http.MethodHead {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Check if the file exists in the public directory
+			filePath := filepath.Join(absDir, filepath.Clean(r.URL.Path))
+			info, err := os.Stat(filePath)
+			if err != nil || info.IsDir() {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			fs.ServeHTTP(w, r)
+		})
+	}
 }

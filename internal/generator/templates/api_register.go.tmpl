@@ -37,10 +37,14 @@ func Register{{.Name}}Routes(api huma.API, act actions.{{.Name}}Actions) {
 {{- end}}
 {{- end}}
 
+{{- if sortableFieldNames .Fields}}
 		sort := models.{{.Name}}Sort{
 			Field:     input.Sort,
 			Direction: input.SortDir,
 		}
+{{- else}}
+		sort := models.{{.Name}}Sort{}
+{{- end}}
 
 		// Decode cursor if provided
 		page := 1

@@ -2,11 +2,14 @@ package migrate
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
+	"time"
 )
 
 // Config holds the configuration for Atlas CLI commands.
@@ -39,16 +42,27 @@ func Diff(cfg Config, name string, force bool) (string, error) {
 		"--dev-url", cfg.DevURL,
 	}
 
-	// Execute atlas command
-	cmd := exec.Command(cfg.AtlasBin, args...)
+	// Execute atlas command with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, cfg.AtlasBin, args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		// Combine stdout and stderr for error context
 		output := stdout.String() + stderr.String()
+		if ctx.Err() == context.DeadlineExceeded {
+			return "", fmt.Errorf("atlas migrate diff timed out after 30s.\nCheck that the dev database is reachable and the URL is correct.\nOutput: %s", output)
+		}
 		return "", fmt.Errorf("atlas migrate diff failed: %w\nOutput: %s", err, output)
+	}
+
+	// Check if atlas reported "no changes" (schema already in sync)
+	output := stdout.String() + stderr.String()
+	if strings.Contains(output, "no changes") || strings.Contains(output, "synced") {
+		return "", fmt.Errorf("no schema changes detected — the migration directory is already in sync")
 	}
 
 	// Find the newly created migration file (newest .sql file in migrations/)
@@ -92,14 +106,20 @@ func Up(cfg Config) (string, error) {
 		"--url", cfg.DatabaseURL,
 	}
 
-	// Execute atlas command
-	cmd := exec.Command(cfg.AtlasBin, args...)
+	// Execute atlas command with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, cfg.AtlasBin, args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
 		output := stdout.String() + stderr.String()
+		if ctx.Err() == context.DeadlineExceeded {
+			return "", fmt.Errorf("atlas migrate apply timed out after 30s.\nOutput: %s", output)
+		}
 		return "", fmt.Errorf("atlas migrate apply failed: %w\nOutput: %s", err, output)
 	}
 
@@ -121,14 +141,20 @@ func Down(cfg Config) (string, error) {
 		"--dev-url", cfg.DevURL,
 	}
 
-	// Execute atlas command
-	cmd := exec.Command(cfg.AtlasBin, args...)
+	// Execute atlas command with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, cfg.AtlasBin, args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
 		output := stdout.String() + stderr.String()
+		if ctx.Err() == context.DeadlineExceeded {
+			return "", fmt.Errorf("atlas migrate down timed out after 30s.\nOutput: %s", output)
+		}
 		return "", fmt.Errorf("atlas migrate down failed: %w\nOutput: %s", err, output)
 	}
 
@@ -149,14 +175,20 @@ func Status(cfg Config) (string, error) {
 		"--url", cfg.DatabaseURL,
 	}
 
-	// Execute atlas command
-	cmd := exec.Command(cfg.AtlasBin, args...)
+	// Execute atlas command with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, cfg.AtlasBin, args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
 		output := stdout.String() + stderr.String()
+		if ctx.Err() == context.DeadlineExceeded {
+			return "", fmt.Errorf("atlas migrate status timed out after 30s.\nOutput: %s", output)
+		}
 		return "", fmt.Errorf("atlas migrate status failed: %w\nOutput: %s", err, output)
 	}
 
@@ -176,12 +208,18 @@ func Hash(cfg Config) error {
 		"--dir", "file://" + cfg.MigrationDir,
 	}
 
-	// Execute atlas command
-	cmd := exec.Command(cfg.AtlasBin, args...)
+	// Execute atlas command with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, cfg.AtlasBin, args...)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return fmt.Errorf("atlas migrate hash timed out after 30s.\nOutput: %s", stderr.String())
+		}
 		return fmt.Errorf("atlas migrate hash failed: %w\nOutput: %s", err, stderr.String())
 	}
 

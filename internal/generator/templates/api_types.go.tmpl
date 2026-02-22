@@ -4,6 +4,7 @@ package api
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -30,8 +31,18 @@ func toHumaError(err error) huma.StatusError {
 	if fe, ok := err.(*errors.Error); ok {
 		forgeErr = fe
 	} else {
-		// Unknown error type — treat as internal server error
+		// Unknown error type — log and treat as internal server error
+		slog.Error("untyped handler error", "err", err)
 		return huma.Error500InternalServerError("internal server error")
+	}
+
+	// Log server errors with the underlying cause
+	if forgeErr.Status >= 500 && forgeErr.Err != nil {
+		slog.Error("handler error",
+			"status", forgeErr.Status,
+			"code", forgeErr.Code,
+			"err", forgeErr.Err,
+		)
 	}
 
 	switch forgeErr.Status {

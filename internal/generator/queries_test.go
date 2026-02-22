@@ -90,13 +90,23 @@ func TestGenerateQueries(t *testing.T) {
 
 	contentStr := string(content)
 
-	// Verify file contains expected functions
-	if !strings.Contains(contentStr, "func FilterMods") {
-		t.Error("Generated file should contain FilterMods function")
+	// Verify file contains expected functions (prefixed with resource name)
+	if !strings.Contains(contentStr, "func ProductFilterMods") {
+		t.Error("Generated file should contain ProductFilterMods function")
 	}
 
-	if !strings.Contains(contentStr, "func SortMod") {
-		t.Error("Generated file should contain SortMod function")
+	if !strings.Contains(contentStr, "func ProductSortMod") {
+		t.Error("Generated file should contain ProductSortMod function")
+	}
+
+	// Verify dialect import for correct SelectQuery type
+	if !strings.Contains(contentStr, `"github.com/stephenafamo/bob/dialect/psql/dialect"`) {
+		t.Error("Generated file should import Bob dialect package for dialect.SelectQuery type")
+	}
+
+	// Verify dialect.SelectQuery is used instead of psql.SelectQuery
+	if !strings.Contains(contentStr, "*dialect.SelectQuery") {
+		t.Error("Generated file should use *dialect.SelectQuery, not *psql.SelectQuery")
 	}
 
 	// Verify Filterable fields get EQ/NEQ methods
@@ -145,6 +155,10 @@ func TestGenerateQueries(t *testing.T) {
 	}
 
 	// Verify Bob imports
+	if !strings.Contains(contentStr, `"github.com/stephenafamo/bob"`) {
+		t.Error("Generated file should import root Bob package for bob.Mod type")
+	}
+
 	if !strings.Contains(contentStr, `"github.com/stephenafamo/bob/dialect/psql"`) {
 		t.Error("Generated file should import Bob psql package")
 	}

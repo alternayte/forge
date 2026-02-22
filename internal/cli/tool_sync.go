@@ -19,7 +19,7 @@ func newToolSyncCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "Download required tool binaries",
-		Long: `Download required tool binaries to .forge/tools/ directory.
+		Long: `Download required tool binaries to .forge/bin/ directory.
 
 Forge relies on external tools (templ, sqlc, tailwind, atlas) for code generation
 and development. This command downloads platform-appropriate binaries for your OS
@@ -42,7 +42,7 @@ re-download all tools.`,
 			}
 
 			// Set destination directory
-			destDir := filepath.Join(projectRoot, ".forge", "tools")
+			destDir := filepath.Join(projectRoot, ".forge", "bin")
 
 			// Get tool registry
 			registry := toolsync.DefaultRegistry()

@@ -47,9 +47,9 @@ func TestScaffoldResource(t *testing.T) {
 		t.Fatalf("ScaffoldResource failed: %v", err)
 	}
 
-	// All 5 files should be created
-	if len(result.Created) != 5 {
-		t.Errorf("expected 5 created files, got %d: %v", len(result.Created), result.Created)
+	// All 6 files should be created
+	if len(result.Created) != 6 {
+		t.Errorf("expected 6 created files, got %d: %v", len(result.Created), result.Created)
 	}
 	if len(result.Skipped) != 0 {
 		t.Errorf("expected 0 skipped files, got %d: %v", len(result.Skipped), result.Skipped)
@@ -59,7 +59,7 @@ func TestScaffoldResource(t *testing.T) {
 
 	// Verify form.templ content
 	formContent := readFile(t, filepath.Join(resourceDir, "views/form.templ"))
-	for _, check := range []string{"ProductForm", "data-bind", "errors"} {
+	for _, check := range []string{"ProductForm", "data-bind", "errors", "SignalsJSON", "encoding/json"} {
 		if !strings.Contains(formContent, check) {
 			t.Errorf("form.templ missing %q", check)
 		}
@@ -77,6 +77,12 @@ func TestScaffoldResource(t *testing.T) {
 	detailContent := readFile(t, filepath.Join(resourceDir, "views/detail.templ"))
 	if !strings.Contains(detailContent, "ProductDetail") {
 		t.Errorf("detail.templ missing %q", "ProductDetail")
+	}
+
+	// Verify error.templ content
+	errorContent := readFile(t, filepath.Join(resourceDir, "views/error.templ"))
+	if !strings.Contains(errorContent, "ProductError") {
+		t.Errorf("error.templ missing %q", "ProductError")
 	}
 
 	// Verify handlers.go content
@@ -123,9 +129,9 @@ func TestScaffoldResource_SkipsExisting(t *testing.T) {
 		t.Errorf("expected views/form.templ in Skipped, got: %v", result.Skipped)
 	}
 
-	// Other 4 files should be in Created
-	if len(result.Created) != 4 {
-		t.Errorf("expected 4 created files, got %d: %v", len(result.Created), result.Created)
+	// Other 5 files should be in Created
+	if len(result.Created) != 5 {
+		t.Errorf("expected 5 created files, got %d: %v", len(result.Created), result.Created)
 	}
 
 	// Verify form.templ was NOT overwritten

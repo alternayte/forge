@@ -31,6 +31,25 @@ func GenerateActions(resources []parser.ResourceIR, outputDir string, projectMod
 		return err
 	}
 
+	// Generate defaults.go — NewDefaultRegistry(db) pre-populated with all defaults
+	defaultsData := struct {
+		Resources     []parser.ResourceIR
+		ProjectModule string
+	}{
+		Resources:     resources,
+		ProjectModule: projectModule,
+	}
+
+	defaultsRaw, err := renderTemplate("templates/actions_defaults.go.tmpl", defaultsData)
+	if err != nil {
+		return err
+	}
+
+	defaultsPath := filepath.Join(actionsDir, "defaults.go")
+	if err := writeGoFile(defaultsPath, defaultsRaw); err != nil {
+		return err
+	}
+
 	// Generate an actions file for each resource
 	for _, resource := range resources {
 		// Prepare template data with ProjectModule

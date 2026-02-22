@@ -19,17 +19,24 @@ func main() {
 		log.Fatal(err)
 	}
 
+	pool, err := forge.ConnectDB(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pool.Close()
+
 	// Build the actions registry with default implementations.
 	// Override individual resources by calling registry.Register("resource", customActions).
-	registry := genactions.NewRegistry()
+	registry := genactions.NewDefaultRegistry(pool)
 
 	app := forge.New(cfg).
+		UsePool(pool).
 		UseRecovery(genmiddleware.Recovery).
 		RegisterAPIRoutes(func(api huma.API) {
 			genapi.RegisterAllRoutes(api, registry)
 		}).
 		RegisterHTMLRoutes(func(r chi.Router) {
-			genhtml.RegisterAllHTMLRoutes(r)
+			genhtml.RegisterAllHTMLRoutes(r, registry)
 		})
 
 	log.Fatal(app.Listen(cfg.ServerAddr()))

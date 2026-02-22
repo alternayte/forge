@@ -8,6 +8,8 @@ type ToolDef struct {
 	BinaryName  string            // Expected binary filename after extraction
 	IsArchive   bool              // true if download is tar.gz/zip that needs extraction
 	Checksums   map[string]string // platform string -> SHA256 hex (e.g., "darwin_arm64" -> "abc123...")
+	OSMap       map[string]string // optional: runtime OS -> tool OS name (e.g., "darwin" -> "macos")
+	ArchMap     map[string]string // optional: runtime Arch -> tool arch name (e.g., "amd64" -> "x64")
 }
 
 // DefaultRegistry returns the tool definitions for all supported tools.
@@ -17,7 +19,7 @@ func DefaultRegistry() []ToolDef {
 	return []ToolDef{
 		{
 			Name:        "templ",
-			Version:     "0.2.793",
+			Version:     "0.3.977",
 			URLTemplate: "https://github.com/a-h/templ/releases/download/v{{.Version}}/templ_{{.OS}}_{{.Arch}}.tar.gz",
 			BinaryName:  "templ",
 			IsArchive:   true,
@@ -25,7 +27,7 @@ func DefaultRegistry() []ToolDef {
 		},
 		{
 			Name:        "sqlc",
-			Version:     "1.27.0",
+			Version:     "1.30.0",
 			URLTemplate: "https://downloads.sqlc.dev/sqlc_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz",
 			BinaryName:  "sqlc",
 			IsArchive:   true,
@@ -33,11 +35,13 @@ func DefaultRegistry() []ToolDef {
 		},
 		{
 			Name:        "tailwind",
-			Version:     "3.4.17",
+			Version:     "4.1.8",
 			URLTemplate: "https://github.com/tailwindlabs/tailwindcss/releases/download/v{{.Version}}/tailwindcss-{{.OS}}-{{.Arch}}",
 			BinaryName:  "tailwindcss",
 			IsArchive:   false, // Standalone binary - zero npm dependency
 			Checksums:   map[string]string{},
+			OSMap:       map[string]string{"darwin": "macos"},
+			ArchMap:     map[string]string{"amd64": "x64"},
 		},
 		{
 			Name:        "atlas",

@@ -1,9 +1,12 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/alternayte/forge/internal/config"
@@ -11,6 +14,7 @@ import (
 	"github.com/alternayte/forge/internal/generator"
 	"github.com/alternayte/forge/internal/parser"
 	"github.com/alternayte/forge/internal/ui"
+	"github.com/alternayte/forge/internal/watcher"
 	"github.com/spf13/cobra"
 )
 
@@ -97,6 +101,52 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("code generation failed: %w", err)
 	}
 
+	// Compile generated templ files in gen/html/ (layout, primitives)
+	genHTMLDir := filepath.Join(genDir, "html")
+	if err := runTemplGenerate(projectRoot, genHTMLDir); err != nil {
+		fmt.Println(ui.Info(fmt.Sprintf("Note: templ generate skipped for gen/html: %v", err)))
+	}
+
+	// Scaffold each resource's views and handlers (scaffold-once: skips existing files)
+	for _, resource := range result.Resources {
+		scaffoldResult, err := generator.ScaffoldResource(resource, projectRoot, cfg.Project.Module)
+		if err != nil {
+			return fmt.Errorf("scaffold %s failed: %w", resource.Name, err)
+		}
+		for _, f := range scaffoldResult.Created {
+			fmt.Println(ui.Success(fmt.Sprintf("resources/%s/%s", strings.ToLower(resource.Name), f)))
+		}
+		if len(scaffoldResult.Created) > 0 {
+			viewsDir := filepath.Join(projectRoot, "resources", strings.ToLower(resource.Name), "views")
+			if err := runTemplGenerate(projectRoot, viewsDir); err != nil {
+				fmt.Println(ui.Info(fmt.Sprintf("Note: templ generate skipped for %s: %v", resource.Name, err)))
+			}
+		}
+	}
+
+	// Scaffold Tailwind input CSS (scaffold-once: skips if exists)
+	if err := watcher.ScaffoldTailwindInput(projectRoot); err != nil {
+		fmt.Println(ui.Info(fmt.Sprintf("Note: could not scaffold Tailwind input CSS: %v", err)))
+	}
+
+	// Compile Tailwind CSS if the binary is installed
+	tailwindBin := filepath.Join(projectRoot, ".forge", "bin", "tailwindcss")
+	if fileExists(tailwindBin) {
+		if err := watcher.RunTailwind(projectRoot); err != nil {
+			fmt.Println(ui.Info(fmt.Sprintf("Note: Tailwind CSS compilation failed: %v", err)))
+		}
+	} else {
+		fmt.Println(ui.Info("Tailwind CSS binary not found. Run 'forge tool sync' to download it."))
+	}
+
+	// Inject replace directive for local forge development and tidy modules
+	if err := injectForgeReplace(projectRoot); err != nil {
+		fmt.Println(ui.Info(fmt.Sprintf("Note: could not inject replace directive: %v", err)))
+	}
+	if err := runGoModTidy(projectRoot); err != nil {
+		fmt.Println(ui.Info(fmt.Sprintf("Note: go mod tidy failed: %v", err)))
+	}
+
 	// Count generated files and display results
 	modelsDir := filepath.Join(genDir, "models")
 	if dirExists(modelsDir) {
@@ -152,4 +202,73 @@ func fileExists(path string) bool {
 func dirExists(path string) bool {
 	info, err := os.Stat(path)
 	return err == nil && info.IsDir()
+}
+
+// injectForgeReplace adds a replace directive for the forge module if running
+// from source. This enables `go build` in generated projects during development
+// before the forge module is published to a module proxy.
+func injectForgeReplace(projectRoot string) error {
+	forgeRoot, err := findForgeSourceRoot()
+	if err != nil {
+		// Not running from source — skip silently
+		return nil
+	}
+
+	goModPath := filepath.Join(projectRoot, "go.mod")
+	content, err := os.ReadFile(goModPath)
+	if err != nil {
+		return err
+	}
+	if bytes.Contains(content, []byte("replace github.com/alternayte/forge")) {
+		return nil // already present
+	}
+
+	cmd := exec.Command("go", "mod", "edit",
+		"-replace", fmt.Sprintf("github.com/alternayte/forge=%s", forgeRoot))
+	cmd.Dir = projectRoot
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("go mod edit -replace: %s: %w", out, err)
+	}
+	return nil
+}
+
+// findForgeSourceRoot locates the forge module root by walking up from the
+// current executable. Returns an error if the binary isn't inside a forge
+// source tree (e.g., installed via `go install`).
+func findForgeSourceRoot() (string, error) {
+	exe, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	exe, err = filepath.EvalSymlinks(exe)
+	if err != nil {
+		return "", err
+	}
+
+	dir := filepath.Dir(exe)
+	for {
+		goMod := filepath.Join(dir, "go.mod")
+		if content, err := os.ReadFile(goMod); err == nil {
+			if bytes.Contains(content, []byte("module github.com/alternayte/forge")) {
+				return dir, nil
+			}
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", fmt.Errorf("forge source root not found")
+		}
+		dir = parent
+	}
+}
+
+// runGoModTidy runs `go mod tidy` in the project directory to resolve
+// transitive dependencies after code generation.
+func runGoModTidy(projectRoot string) error {
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = projectRoot
+	cmd.Env = append(os.Environ(), "GOFLAGS=-mod=mod")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("go mod tidy: %s: %w", out, err)
+	}
+	return nil
 }

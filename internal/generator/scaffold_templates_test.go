@@ -56,24 +56,27 @@ func TestScaffoldTemplates(t *testing.T) {
 				"package views",
 				"gen/html/primitives",
 				"gen/models",
+				"encoding/json",
 				// Component signature with role parameter
 				"ProductForm",
 				"*models.Product",
 				"errors map[string]string",
 				"role string",
+				// Nil-safe helper and signals JSON helper
+				"safeProduct",
+				"productSignalsJSON",
 				// Datastar SSE form element
 				"product-form",
 				"data-on:submit__prevent",
 				"@post('/products')",
-				// data-signals for non-ID fields
+				// Dynamic data-signals via helper
 				"data-signals",
-				"name: ''",
-				"price: ''",
-				"active: ''",
 				// data-bind on inline inputs (Bool, Int generate inline inputs with data-bind)
 				"data-bind",
 				// FormField primitive usage
 				"primitives.FormField",
+				// TextArea for Text type fields (AdminNotes has Visibility modifier)
+				"primitives.TextArea",
 				// Visibility modifier generates role guard
 				`role == "" || role == "admin"`,
 				// fmt.Sprint used for read-only fallback and DecimalInput

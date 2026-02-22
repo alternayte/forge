@@ -1,10 +1,38 @@
 package views
 
 import (
+{{- if formNeedsJSON .Resource.Fields}}
+	"encoding/json"
+{{- end}}
+{{- if formNeedsFmt .Resource.Fields}}
 	"fmt"
+{{- end}}
 	"{{.ProjectModule}}/gen/models"
 	"{{.ProjectModule}}/gen/html/primitives"
 )
+
+// safe{{.Resource.Name}} returns a non-nil {{.Resource.Name}} model, providing zero-value defaults for new forms.
+func safe{{.Resource.Name}}({{lower .Resource.Name}} *models.{{.Resource.Name}}) *models.{{.Resource.Name}} {
+	if {{lower .Resource.Name}} == nil {
+		return &models.{{.Resource.Name}}{}
+	}
+	return {{lower .Resource.Name}}
+}
+
+// {{lower .Resource.Name}}SignalsJSON returns a JSON string of field signals for Datastar data-signals.
+// For new forms (nil model), fields get zero-value defaults; for edit forms, fields get actual data.
+func {{lower .Resource.Name}}SignalsJSON({{lower .Resource.Name}} *models.{{.Resource.Name}}) string {
+	s := safe{{.Resource.Name}}({{lower .Resource.Name}})
+	m := map[string]interface{}{
+{{- range .Resource.Fields}}
+{{- if not (isIDField .)}}
+		"{{snake .Name}}": s.{{.Name}},
+{{- end}}
+{{- end}}
+	}
+	b, _ := json.Marshal(m)
+	return string(b)
+}
 
 // {{.Resource.Name}}Form renders a Datastar-native form for creating or editing a {{.Resource.Name}}.
 // The role parameter controls field-level visibility and mutability based on schema modifiers.
@@ -12,13 +40,7 @@ templ {{.Resource.Name}}Form({{lower .Resource.Name}} *models.{{.Resource.Name}}
 	<div id="{{lower .Resource.Name}}-form">
 		<form
 			data-on:submit__prevent="@post('/{{kebab (plural .Resource.Name)}}')"
-			data-signals="{
-{{- range .Resource.Fields}}
-{{- if not (isIDField .)}}
-				{{snake .Name}}: '',
-{{- end}}
-{{- end}}
-			}"
+			data-signals={ {{lower .Resource.Name}}SignalsJSON({{lower .Resource.Name}}) }
 		>
 			<div class="flex flex-col gap-4">
 {{- range .Resource.Fields}}
@@ -29,13 +51,13 @@ templ {{.Resource.Name}}Form({{lower .Resource.Name}} *models.{{.Resource.Name}}
 					if role == "" || role == "{{getModifierValue .Modifiers "Mutability"}}" {
 						@primitives.FormField("{{.Name}}", "{{snake .Name}}", errors["{{snake .Name}}"]) {
 {{- if eq .Type "Enum"}}
-							@primitives.SelectInput("{{snake .Name}}", {{lower $.Resource.Name}}.{{.Name}}, []primitives.SelectOption{
+							@primitives.SelectInput("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, []primitives.SelectOption{
 {{- range .EnumValues}}
 								{Value: "{{.}}", Label: "{{.}}"},
 {{- end}}
 							})
 {{- else if eq .Type "Decimal"}}
-							@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}), "")
+							@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint(safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}), "")
 {{- else if eq .Type "Bool"}}
 							<input
 								id="{{snake .Name}}"
@@ -68,26 +90,28 @@ templ {{.Resource.Name}}Form({{lower .Resource.Name}} *models.{{.Resource.Name}}
 								data-bind="{{snake .Name}}"
 								class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
 							/>
+{{- else if eq .Type "Text"}}
+							@primitives.TextArea("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, "")
 {{- else}}
-							@primitives.TextInput("{{snake .Name}}", "", "")
+							@primitives.TextInput("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, "")
 {{- end}}
 						}
 					} else {
 						<div class="flex flex-col gap-1">
 							<span class="text-sm font-medium text-gray-700">{{.Name}}</span>
-							<span class="text-sm text-gray-600">{ fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}) }</span>
+							<span class="text-sm text-gray-600">{ fmt.Sprint(safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}) }</span>
 						</div>
 					}
 {{- else}}
 					@primitives.FormField("{{.Name}}", "{{snake .Name}}", errors["{{snake .Name}}"]) {
 {{- if eq .Type "Enum"}}
-						@primitives.SelectInput("{{snake .Name}}", {{lower $.Resource.Name}}.{{.Name}}, []primitives.SelectOption{
+						@primitives.SelectInput("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, []primitives.SelectOption{
 {{- range .EnumValues}}
 							{Value: "{{.}}", Label: "{{.}}"},
 {{- end}}
 						})
 {{- else if eq .Type "Decimal"}}
-						@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}), "")
+						@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint(safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}), "")
 {{- else if eq .Type "Bool"}}
 						<input
 							id="{{snake .Name}}"
@@ -120,8 +144,10 @@ templ {{.Resource.Name}}Form({{lower .Resource.Name}} *models.{{.Resource.Name}}
 							data-bind="{{snake .Name}}"
 							class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
 						/>
+{{- else if eq .Type "Text"}}
+						@primitives.TextArea("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, "")
 {{- else}}
-						@primitives.TextInput("{{snake .Name}}", "", "")
+						@primitives.TextInput("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, "")
 {{- end}}
 					}
 {{- end}}
@@ -130,13 +156,13 @@ templ {{.Resource.Name}}Form({{lower .Resource.Name}} *models.{{.Resource.Name}}
 				if role == "" || role == "{{getModifierValue .Modifiers "Mutability"}}" {
 					@primitives.FormField("{{.Name}}", "{{snake .Name}}", errors["{{snake .Name}}"]) {
 {{- if eq .Type "Enum"}}
-						@primitives.SelectInput("{{snake .Name}}", {{lower $.Resource.Name}}.{{.Name}}, []primitives.SelectOption{
+						@primitives.SelectInput("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, []primitives.SelectOption{
 {{- range .EnumValues}}
 							{Value: "{{.}}", Label: "{{.}}"},
 {{- end}}
 						})
 {{- else if eq .Type "Decimal"}}
-						@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}), "")
+						@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint(safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}), "")
 {{- else if eq .Type "Bool"}}
 						<input
 							id="{{snake .Name}}"
@@ -169,26 +195,28 @@ templ {{.Resource.Name}}Form({{lower .Resource.Name}} *models.{{.Resource.Name}}
 							data-bind="{{snake .Name}}"
 							class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
 						/>
+{{- else if eq .Type "Text"}}
+						@primitives.TextArea("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, "")
 {{- else}}
-						@primitives.TextInput("{{snake .Name}}", "", "")
+						@primitives.TextInput("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, "")
 {{- end}}
 					}
 				} else {
 					<div class="flex flex-col gap-1">
 						<span class="text-sm font-medium text-gray-700">{{.Name}}</span>
-						<span class="text-sm text-gray-600">{ fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}) }</span>
+						<span class="text-sm text-gray-600">{ fmt.Sprint(safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}) }</span>
 					</div>
 				}
 {{- else}}
 				@primitives.FormField("{{.Name}}", "{{snake .Name}}", errors["{{snake .Name}}"]) {
 {{- if eq .Type "Enum"}}
-					@primitives.SelectInput("{{snake .Name}}", {{lower $.Resource.Name}}.{{.Name}}, []primitives.SelectOption{
+					@primitives.SelectInput("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, []primitives.SelectOption{
 {{- range .EnumValues}}
 						{Value: "{{.}}", Label: "{{.}}"},
 {{- end}}
 					})
 {{- else if eq .Type "Decimal"}}
-					@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint({{lower $.Resource.Name}}.{{.Name}}), "")
+					@primitives.DecimalInput("{{snake .Name}}", fmt.Sprint(safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}), "")
 {{- else if eq .Type "Bool"}}
 					<input
 						id="{{snake .Name}}"
@@ -221,8 +249,10 @@ templ {{.Resource.Name}}Form({{lower .Resource.Name}} *models.{{.Resource.Name}}
 						data-bind="{{snake .Name}}"
 						class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
 					/>
+{{- else if eq .Type "Text"}}
+					@primitives.TextArea("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, "")
 {{- else}}
-					@primitives.TextInput("{{snake .Name}}", "", "")
+					@primitives.TextInput("{{snake .Name}}", safe{{$.Resource.Name}}({{lower $.Resource.Name}}).{{.Name}}, "")
 {{- end}}
 				}
 {{- end}}

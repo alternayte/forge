@@ -6,6 +6,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 )
@@ -13,7 +14,7 @@ import (
 // DB is an interface compatible with pgx transaction types.
 // It allows code to accept either a pool or a transaction.
 type DB interface {
-	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgx.CommandTag, error)
+	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
 }
@@ -24,7 +25,9 @@ type TransactionFunc func(ctx context.Context, tx pgx.Tx) error
 // Transaction wraps pgx.BeginFunc to provide a clean transaction API.
 // The transaction commits if fn returns nil, and rolls back if fn returns an error.
 func Transaction(ctx context.Context, pool *pgxpool.Pool, fn TransactionFunc) error {
-	return pgx.BeginFunc(ctx, pool, fn)
+	return pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
+		return fn(ctx, tx)
+	})
 }
 
 // TransactionWithJobs wraps a transaction and provides a River client for transactional job enqueueing.

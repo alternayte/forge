@@ -7,23 +7,9 @@ import (
 	"path/filepath"
 )
 
-// tailwindInputCSS is the Tailwind v3 input CSS content.
-// Uses @tailwind directives (v3 syntax). Tailwind v4 uses CSS-first @import syntax,
-// but we stay with v3.4.17 as pinned in the toolsync registry.
-const tailwindInputCSS = `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-`
-
-// tailwindConfigJS is the tailwind.config.js for v3 that scans .templ files.
-// Resources are placed in resources/ (scaffold-once) and gen/ (always-regenerated).
-// Both directories must be included so Tailwind's JIT engine sees every class used
-// in the application's Templ components.
-const tailwindConfigJS = `module.exports = {
-  content: ["./resources/**/*.templ", "./gen/**/*.templ"],
-  theme: { extend: {} },
-  plugins: [],
-}
+// tailwindInputCSS is the Tailwind v4 input CSS content.
+// Tailwind v4 uses a single @import directive and auto-detects content sources.
+const tailwindInputCSS = `@import "tailwindcss";
 `
 
 // tailwindBinPath returns the expected path to the Tailwind CSS standalone CLI binary.
@@ -91,16 +77,17 @@ func RunTailwindWatch(projectRoot string) (*exec.Cmd, error) {
 	return cmd, nil
 }
 
-// ScaffoldTailwindInput creates the initial Tailwind CSS input file and configuration
-// for a new project. Uses the scaffold-once pattern: existing files are never overwritten
-// to preserve developer customizations.
+// ScaffoldTailwindInput creates the initial Tailwind CSS input file for a new project.
+// Uses the scaffold-once pattern: existing files are never overwritten to preserve
+// developer customizations.
 //
 // Creates:
-//   - resources/css/input.css  — Tailwind v3 @tailwind directives
-//   - tailwind.config.js       — content paths scanning .templ files in resources/ and gen/
+//   - resources/css/input.css  — Tailwind v4 @import directive
+//
+// Tailwind v4 auto-detects content sources from all non-gitignored files,
+// so no tailwind.config.js is needed.
 func ScaffoldTailwindInput(projectRoot string) error {
 	inputPath := filepath.Join(projectRoot, "resources", "css", "input.css")
-	configPath := filepath.Join(projectRoot, "tailwind.config.js")
 
 	// Scaffold input.css (skip if already exists)
 	if _, err := os.Stat(inputPath); os.IsNotExist(err) {
@@ -109,13 +96,6 @@ func ScaffoldTailwindInput(projectRoot string) error {
 		}
 		if err := os.WriteFile(inputPath, []byte(tailwindInputCSS), 0644); err != nil {
 			return fmt.Errorf("writing resources/css/input.css: %w", err)
-		}
-	}
-
-	// Scaffold tailwind.config.js (skip if already exists)
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		if err := os.WriteFile(configPath, []byte(tailwindConfigJS), 0644); err != nil {
-			return fmt.Errorf("writing tailwind.config.js: %w", err)
 		}
 	}
 

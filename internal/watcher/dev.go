@@ -265,7 +265,7 @@ func (d *DevServer) ensureDatabase() error {
 	if !exists {
 		// CREATE DATABASE doesn't support parameters — use quoted identifier
 		// (dbName comes from the user's own forge.toml, not external input)
-		_, err = conn.Exec(context.Background(), fmt.Sprintf("CREATE DATABASE %q", dbName))
+		_, err = conn.Exec(context.Background(), fmt.Sprintf("CREATE DATABASE %s", pgx.Identifier{dbName}.Sanitize()))
 		if err != nil {
 			return err
 		}

@@ -104,7 +104,9 @@ Example:
 			// Auto-create the dev database (Atlas needs a clean DB for diffing)
 			devHost, devPort, devDBName, devUser, devPass, err := parseDatabaseURL(devURL)
 			if err == nil {
-				_ = createDatabase(devHost, devPort, devDBName, devUser, devPass)
+				if dbErr := createDatabase(devHost, devPort, devDBName, devUser, devPass); dbErr != nil {
+					fmt.Println(ui.Info(fmt.Sprintf("Could not auto-create dev database: %s", dbErr)))
+				}
 			}
 
 			// Run diff

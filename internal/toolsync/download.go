@@ -10,10 +10,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 	"os"
 	"path/filepath"
 	"text/template"
 )
+
+var downloadClient = &http.Client{
+	Timeout: 5 * time.Minute,
+}
 
 // DownloadTool downloads a tool binary from the registry.
 func DownloadTool(tool ToolDef, platform Platform, destDir string, progress func(pct float64)) error {
@@ -147,7 +152,7 @@ func downloadWithProgress(ctx context.Context, url string, w io.Writer, progress
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := downloadClient.Do(req)
 	if err != nil {
 		return err
 	}

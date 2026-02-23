@@ -57,15 +57,17 @@ func DefaultRegistry() []ToolDef {
 			ArchMap: map[string]string{"amd64": "x64"},
 		},
 		{
-			// Atlas uses "latest" channel — checksums are not practical since
-			// the binary content changes with each release. Integrity is
-			// verified via HTTPS from Ariga's official release endpoint.
 			Name:        "atlas",
-			Version:     "latest",
-			URLTemplate: "https://release.ariga.io/atlas/atlas-{{.OS}}-{{.Arch}}-latest",
+			Version:     "1.1.0",
+			URLTemplate: "https://release.ariga.io/atlas/atlas-{{.OS}}-{{.Arch}}-v{{.Version}}",
 			BinaryName:  "atlas",
 			IsArchive:   false,
-			Checksums:   map[string]string{},
+			Checksums: map[string]string{
+				"darwin_arm64": "3b3825eef961c8bc07f3bfe3da7a4d99b615b7955b1c6115a40130b1c9767727",
+				"darwin_amd64": "e009ab7931ef93109c80d0d7dc9e46e38c98426635088521c4694fdb28d0f44e",
+				"linux_arm64":  "39fdf4975613c3f3e7f6f3ac082a72387db15119efa069caad9c1642f71b03e4",
+				"linux_amd64":  "af19315d37190dd4d6af75358708c4537fc36b5720ce081e493cf4fa69452ef5",
+			},
 		},
 	}
 }
